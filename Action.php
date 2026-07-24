@@ -420,30 +420,62 @@ class TypechoPaid_Action extends Widget_Abstract_Contents implements Widget_Inte
 
         try {
             $driver = TypechoPaid_PaymentFactory::create($channels[$channel]['driver']);
-            if (!$driver->verifyNotify($_REQUEST, $channels[$channel])) {
+            // 仅使用 POST 数据验签，避免 Cookie 污染 $_REQUEST
+            if (!$driver->verifyNotify($_POST, $channels[$channel])) {
                 $this->response->throwJson(array('success' => 0, 'msg' => 'invalid payment notification'));
             }
         } catch (Exception $e) {
             $this->response->throwJson(array('success' => 0, 'msg' => 'payment driver error'));
         }
 
-        $paidNow = $this->markOrderPaid($tradeNo, json_encode($_REQUEST));
-        $ok = $paidNow !== false;
-        if (!$ok) {
+        // 校验支付金额（防篡改）
+        $order = $this->db->fetchRow($this->db->select()->from('table.' . TypechoPaid_Plugin::tableName())->where('trade_no = ?', $tradeNo));
+        if (empty($order)) {
+            $this->response->throwJson(array('success' => 0, 'msg' => 'order not found'));
+        }
+        $orderPrice = floatval($order['price']);
+        $notifyAmount = $this->extractNotifyAmount($_POST);
+        if ($notifyAmount !== null && abs($notifyAmount - $orderPrice) > 0.005) {
+            $this->response->throwJson(array('success' => 0, 'msg' => 'amount mismatch: expected ' . $orderPrice . ', got ' . $notifyAmount));
+        }
+
+        // 仅存储 POST 数据，避免 Cookie 等敏感信息入库
+        $paidNow = $this->markOrderPaid($tradeNo, json_encode($_POST));
+        if ($paidNow === false) {
             $this->response->throwJson(array('success' => 0, 'msg' => 'order not found'));
         }
 
-        $order = $this->db->fetchRow($this->db->select()->from('table.' . TypechoPaid_Plugin::tableName())->where('trade_no = ?', $tradeNo));
-        if (!empty($order) && !empty($order['plan_id']) && !empty($order['expires_at'])) {
-            TypechoPaid_Plugin::setSubscriptionCookieUntil($order['plan_id'], intval($order['expires_at']));
-        } elseif (!empty($order) && !empty($order['cid'])) {
-            TypechoPaid_Plugin::setUnlockCookie(intval($order['cid']));
-        }
-        if ($paidNow) {
+        // 仅真正的首次支付成功才设置 Cookie 和发送通知（防止重放刷新 Cookie）
+        if ($paidNow === true) {
+            if (!empty($order['plan_id']) && !empty($order['expires_at'])) {
+                TypechoPaid_Plugin::setSubscriptionCookieUntil($order['plan_id'], intval($order['expires_at']));
+            } elseif (!empty($order['cid'])) {
+                TypechoPaid_Plugin::setUnlockCookie(intval($order['cid']));
+            }
             $this->sendPurchaseNotification($tradeNo);
         }
 
         $this->response->throwJson(array('success' => 1, 'msg' => 'ok'));
+    }
+
+    /**
+     * 从通知参数中提取支付金额（兼容各网关字段名）
+     * @return float|null null 表示无法提取金额（不强制拦截）
+     */
+    private function extractNotifyAmount(array $post)
+    {
+        $map = array(
+            'money'        => 1.0,   // 易支付：元
+            'total_amount' => 1.0,   // 支付宝：元
+            'amount'       => 1.0,   // 通用：元
+            'total_fee'    => 0.01,  // 微信：分 → 元
+        );
+        foreach ($map as $key => $factor) {
+            if (isset($post[$key]) && is_numeric($post[$key])) {
+                return round(floatval($post[$key]) * $factor, 2);
+            }
+        }
+        return null;
     }
 
     private function markOrderPaid($tradeNo, $payload)
