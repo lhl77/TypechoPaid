@@ -143,7 +143,7 @@ $invalidCount = intval($db->fetchObject($invalidSel)->num);
                                 <td><span class="tp-subscription-state <?php echo $row['status'] === 'invalid' ? 'is-invalid' : ($active ? 'is-active' : 'is-expired'); ?>"><?php echo $row['status'] === 'invalid' ? '已失效' : ($active ? '有效中' : '已到期'); ?></span></td>
                                 <td style="white-space:nowrap">
                                     <?php if ($row['status'] !== 'invalid' && $active): ?>
-                                    <form method="post" style="display:inline" onsubmit="return confirm('确认将此订阅设为失效？失效后无法恢复。')">
+                                    <form method="post" style="display:inline" onsubmit="if(!confirm('确认将此订阅设为失效？失效后无法恢复。'))return false;var s=this.closest('tr').querySelector('.tp-subscription-state');if(s){s.textContent='已失效';s.className='tp-subscription-state is-invalid';}"> 
                                         <input type="hidden" name="invalidate_id" value="<?php echo intval($row['id']); ?>">
                                         <button type="submit" class="btn btn-xs" style="color:#dc2626">设为失效</button>
                                     </form>
