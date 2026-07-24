@@ -1,0 +1,43 @@
+<div class="tp-paid-box tp-paid-theme-{{theme_id}}" style="{{theme_style_vars}}" data-theme-options="{{theme_options_json}}" data-mode="{{theme_mode}}" data-mode-switch="{{theme_mode_switch}}">
+  <div class="tp-paid-preview">{{preview}}</div>
+  <div class="tp-paid-card" data-status-action="{{status_action}}">
+    <div class="tp-paid-buy-view">
+      <h3 class="tp-paid-title">{{title}}</h3>
+      <p class="tp-paid-desc">{{desc}}</p>
+      {{plan_label}}
+      {{plan_html}}
+
+      <form class="tp-paid-form" method="post" action="{{create_action}}" data-create-action="{{create_action}}" onsubmit="return TypechoPaid.submitCreate(this);">
+        <input type="hidden" name="cid" value="{{cid}}">
+        <input type="hidden" name="subscribe_action" value="{{subscribe_action}}">
+        <input type="hidden" name="plan_key" value="">
+        <div class="tp-paid-row"><input class="tp-paid-input" type="email" name="email" placeholder="电子邮箱" required></div>
+        <div class="tp-paid-row">
+          <input class="tp-paid-input" type="text" name="visit_password" placeholder="访问密码（选填）">
+        </div>
+        <div class="tp-paid-methods">{{methods_html}}</div>
+        {{turnstile_html}}
+        <div class="tp-paid-row"><button class="tp-paid-btn" type="submit"{{buy_disabled}}>立即购买</button></div>
+      </form>
+
+      <div class="tp-paid-payment-box" data-role="payment-box"></div>
+
+      <div class="tp-paid-row tp-paid-switch-row">
+        <a href="javascript:;" class="tp-paid-link" onclick="return TypechoPaid.toggleUnlock(this);">已经购买？点此验证</a>
+      </div>
+    </div>
+
+    <div class="tp-paid-unlock-view">
+      <div class="tp-paid-row"><a href="javascript:;" class="tp-paid-back" onclick="return TypechoPaid.backToBuy(this);">← 返回购买页</a></div>
+      <form class="tp-paid-form" method="post" action="{{unlock_action}}" onsubmit="return TypechoPaid.submitUnlock(this);">
+        <input type="hidden" name="cid" value="{{cid}}">
+        <div class="tp-paid-row"><input class="tp-paid-input" type="email" name="email" placeholder="电子邮箱" required></div>
+        <div class="tp-paid-row"><input class="tp-paid-input" type="text" name="credential" placeholder="访问密码 / 商户订单号"></div>
+        <div class="tp-paid-row"><button class="tp-paid-btn tp-paid-btn-verify" type="submit">验证并解锁</button></div>
+      </form>
+    </div>
+
+    <div class="tp-paid-msg" data-role="msg"></div>
+    <div class="tp-paid-copyright">Powered By <a href="https://github.com/lhl77/TypechoPaid" target="_blank" rel="noopener">Paid</a></div>
+  </div>
+</div>

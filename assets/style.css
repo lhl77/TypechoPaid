@@ -1,0 +1,486 @@
+/* ===== TypechoPaid 全局样式 — 留白 · 呼吸感 ===== */
+
+/* ---------- 容器 ---------- */
+.tp-paid-box {
+    margin: 2.2rem 0;
+}
+
+/* ---------- 模糊预览 ---------- */
+.tp-paid-preview {
+    opacity: 0.68;
+    filter: blur(3px);
+    user-select: none;
+    pointer-events: none;
+    margin-bottom: 1.4rem;
+    line-height: 1.85;
+    font-size: 0.96rem;
+}
+
+.tp-paid-preview:empty {
+    display: none;
+    margin: 0;
+}
+
+/* ---------- 卡片主体 ---------- */
+.tp-paid-card {
+    border: 1px solid var(--tp-border);
+    border-radius: var(--tp-radius, 20px);
+    padding: 1.8rem 1.6rem;
+    background: var(--tp-bg);
+    color: var(--tp-fg);
+    box-shadow:
+        0 1px 3px rgba(0,0,0,0.04),
+        0 6px 24px var(--tp-shadow);
+    transition: box-shadow 0.2s ease;
+}
+
+/* ---------- 标题 / 描述 / 价格 ---------- */
+.tp-paid-title {
+    margin: 0 0 0.3rem;
+    font-size: 1.28rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    line-height: 1.4;
+}
+
+.tp-paid-desc {
+    margin: 0 0 1.2rem;
+    color: var(--tp-muted);
+    font-size: 0.94rem;
+    line-height: 1.65;
+}
+
+.tp-paid-price {
+    margin: 0 0 1.3rem;
+    font-size: 1.08rem;
+    font-weight: 500;
+}
+
+.tp-paid-price[data-show-price="0"] {
+    display: none;
+}
+
+.tp-paid-price strong {
+    font-size: 1.3rem;
+    font-weight: 700;
+    margin-left: 0.2rem;
+}
+
+/* ---------- 分隔线 ---------- */
+.tp-paid-divider {
+    border: none;
+    border-top: 1px solid var(--tp-border);
+    margin: 1.2rem 0;
+    opacity: 0.55;
+}
+
+/* ---------- 表单 ---------- */
+.tp-paid-form {
+    margin-bottom: 0;
+}
+
+.tp-paid-row {
+    margin-bottom: 0.9rem;
+}
+
+.tp-paid-row:last-child {
+    margin-bottom: 0;
+}
+
+.tp-paid-label {
+    display: block;
+    margin-bottom: 0.45rem;
+    font-size: 0.88rem;
+    color: var(--tp-muted);
+    font-weight: 500;
+}
+
+/* ---------- 输入框 ---------- */
+.tp-paid-input {
+    width: 100%;
+    box-sizing: border-box;
+    border: 1.5px solid var(--tp-border);
+    border-radius: var(--tp-radius, 12px);
+    background: var(--tp-input-bg);
+    color: var(--tp-fg);
+    padding: 0.7rem 0.9rem;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    transition: border-color 0.18s ease, box-shadow 0.18s ease;
+    outline: none;
+}
+
+.tp-paid-input:focus {
+    border-color: var(--tp-primary);
+    box-shadow: 0 0 0 3px rgba(11,107,203,0.12);
+}
+
+/* ---------- 支付方式选项卡 ---------- */
+.tp-paid-methods {
+    display: flex;
+    gap: 0.55rem;
+    flex-wrap: wrap;
+    margin-bottom: 1rem;
+}
+
+.tp-paid-chip {
+    border: 1.5px solid var(--tp-border);
+    border-radius: var(--tp-radius, 999px);
+    padding: 0.35rem 0.75rem;
+    font-size: 0.88rem;
+    background: var(--tp-chip-bg);
+    cursor: pointer;
+    transition: border-color 0.18s ease, background 0.18s ease;
+    user-select: none;
+}
+
+.tp-paid-chip:hover {
+    border-color: var(--tp-primary);
+}
+
+.tp-paid-chip:has(input:checked) {
+    border-color: var(--tp-primary);
+    background: color-mix(in srgb, var(--tp-primary) 8%, var(--tp-chip-bg));
+}
+
+.tp-paid-chip input {
+    vertical-align: middle;
+    margin-right: 0.3rem;
+    accent-color: var(--tp-primary);
+}
+
+/* ---------- 按钮 ---------- */
+.tp-paid-btn {
+    width: 100%;
+    border: none;
+    border-radius: var(--tp-radius, 12px);
+    padding: 0.78rem 0.9rem;
+    font-size: 0.98rem;
+    font-weight: 700;
+    background: var(--tp-primary);
+    color: #fff;
+    cursor: pointer;
+    transition: opacity 0.18s ease, transform 0.1s ease;
+    letter-spacing: 0.02em;
+}
+
+.tp-paid-btn:active:not(:disabled) {
+    transform: scale(0.985);
+}
+
+.tp-paid-btn-ghost {
+    background: transparent;
+    color: var(--tp-primary);
+    border: 1.5px solid var(--tp-primary);
+    font-weight: 600;
+}
+
+.tp-paid-btn-ghost:hover:not(:disabled) {
+    background: color-mix(in srgb, var(--tp-primary) 6%, transparent);
+}
+
+.tp-paid-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* ---------- 文字链接 ---------- */
+.tp-paid-link {
+    color: var(--tp-primary);
+    cursor: pointer;
+    text-decoration: none;
+    font-size: 0.92rem;
+    font-weight: 500;
+    transition: opacity 0.18s ease;
+}
+
+.tp-paid-link:hover {
+    opacity: 0.78;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+.tp-paid-switch-row {
+    text-align: center;
+    margin-top: 0.8rem;
+    margin-bottom: 0;
+}
+
+/* ---------- 返回链接 ---------- */
+.tp-paid-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    margin-bottom: 0.9rem;
+    color: var(--tp-muted);
+    cursor: pointer;
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: color 0.18s ease;
+}
+
+.tp-paid-back:hover {
+    color: var(--tp-primary);
+}
+
+/* ---------- 支付二维码区域 ---------- */
+.tp-paid-payment-box {
+    margin: 1rem 0 0;
+    text-align: center;
+}
+
+.tp-paid-payment-box:empty {
+    margin: 0;
+}
+
+.tp-paid-payment-box canvas {
+    max-width: 100%;
+    height: auto;
+    border-radius: var(--tp-radius, 12px);
+    background: #fff;
+    padding: 10px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+}
+
+.tp-paid-qr-tip {
+    margin: 0.6rem 0 0;
+    font-size: 0.84rem;
+    color: var(--tp-muted);
+}
+
+/* ---------- 二维码加载占位动画 ---------- */
+.tp-paid-qr-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.8rem;
+    min-height: 220px;
+}
+.tp-paid-qr-skeleton {
+    width: 180px;
+    height: 180px;
+    border-radius: var(--tp-radius, 12px);
+    background: linear-gradient(110deg, var(--tp-border, #e5e7eb) 30%, var(--tp-bg, #f9fafb) 50%, var(--tp-border, #e5e7eb) 70%);
+    background-size: 200% 100%;
+    animation: tp-paid-shimmer 1.4s ease-in-out infinite;
+}
+.tp-paid-qr-spinner {
+    width: 36px;
+    height: 36px;
+    border: 3px solid var(--tp-border, #e5e7eb);
+    border-top-color: var(--tp-primary, #2563eb);
+    border-radius: 50%;
+    animation: tp-paid-spin 0.8s linear infinite;
+}
+@keyframes tp-paid-shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+@keyframes tp-paid-spin {
+    to { transform: rotate(360deg); }
+}
+
+/* ---------- Turnstile ---------- */
+.cf-turnstile {
+    margin: 0.3rem 0 0.7rem;
+}
+
+/* ---------- 解锁/购买视图切换 ---------- */
+.tp-paid-unlock-view {
+    display: none;
+}
+
+.tp-paid-card.is-unlock-mode .tp-paid-buy-view {
+    display: none;
+}
+
+.tp-paid-card.is-unlock-mode .tp-paid-unlock-view {
+    display: block;
+}
+
+/* ---------- 订阅计划标签 ---------- */
+.tp-paid-plan-label {
+    font-size: 0.88rem;
+    color: var(--tp-muted);
+    margin: 0 0 0.7rem;
+    line-height: 1.5;
+}
+
+/* ---------- 解锁横幅 ---------- */
+.tp-paid-banner {
+    background: var(--tp-chip-bg);
+    border: 1px solid var(--tp-border);
+    border-radius: var(--tp-radius, 12px);
+    padding: 0.7rem 1rem;
+    margin-bottom: 1.2rem;
+    font-size: 0.92rem;
+    color: var(--tp-muted);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* ---------- 订阅计划卡片 ---------- */
+.tp-paid-plans {
+    margin: 1rem 0 1.2rem;
+}
+
+.tp-paid-plan-card {
+    border: 1.5px solid var(--tp-border);
+    border-radius: var(--tp-radius, 14px);
+    padding: 0.9rem 1rem;
+    margin-bottom: 0.55rem;
+    cursor: pointer;
+    transition: border-color 0.18s ease, background 0.18s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    user-select: none;
+}
+
+.tp-paid-plan-card:hover {
+    border-color: var(--tp-primary);
+}
+
+.tp-paid-plan-card.is-selected {
+    border-color: var(--tp-primary);
+    background: color-mix(in srgb, var(--tp-primary) 5%, var(--tp-bg));
+}
+
+.tp-paid-plan-card input[type="radio"] {
+    accent-color: var(--tp-primary);
+    flex-shrink: 0;
+}
+
+.tp-paid-plan-name {
+    font-weight: 600;
+    font-size: 0.94rem;
+    flex: 1;
+}
+
+.tp-paid-plan-price {
+    font-weight: 700;
+    font-size: 1rem;
+    color: var(--tp-primary);
+    white-space: nowrap;
+}
+
+.tp-paid-plan-duration {
+    font-size: 0.82rem;
+    color: var(--tp-muted);
+    white-space: nowrap;
+}
+
+/* ---------- 消息区 ---------- */
+.tp-paid-msg {
+    min-height: 1.2rem;
+    margin-top: 0.7rem;
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+
+.tp-paid-msg a {
+    margin-left: 0.3rem;
+}
+
+.tp-paid-msg.is-ok {
+    color: #0a8f43;
+}
+
+.tp-paid-msg.is-err {
+    color: #d93025;
+}
+
+/* ---------- CSS 变量（亮色默认） ---------- */
+.tp-paid-box {
+    --tp-bg: #ffffff;
+    --tp-fg: #1d1f28;
+    --tp-muted: #5b6270;
+    --tp-border: #dfe2ea;
+    --tp-input-bg: #f9fafc;
+    --tp-chip-bg: #f3f5f9;
+    --tp-primary: #2563eb;
+    --tp-shadow: rgba(27, 39, 70, 0.08);
+    --tp-radius: 20px;
+}
+
+/* ---------- 暗色变量 ---------- */
+.tp-paid-box.tp-paid-mode-dark {
+    --tp-bg: #111827;
+    --tp-fg: #e8edf5;
+    --tp-muted: #98a3be;
+    --tp-border: #263148;
+    --tp-input-bg: #0f1625;
+    --tp-chip-bg: #1a2338;
+    --tp-primary: #6098ff;
+    --tp-shadow: rgba(0, 0, 0, 0.35);
+    --tp-radius: 20px;
+}
+
+/* 暗色模式：二维码 canvas 保持亮底 */
+.tp-paid-box.tp-paid-mode-dark .tp-paid-payment-box canvas {
+    background: #fff;
+}
+
+/* 暗色模式下 input focus 光环适配 */
+.tp-paid-box.tp-paid-mode-dark .tp-paid-input:focus {
+    box-shadow: 0 0 0 3px rgba(96,152,255,0.18);
+}
+
+/* ---------- 系统暗色兜底（JS 执行前） ---------- */
+@media (prefers-color-scheme: dark) {
+    .tp-paid-box:not(.tp-paid-mode-light):not(.tp-paid-mode-dark) {
+        --tp-bg: #111827;
+        --tp-fg: #e8edf5;
+        --tp-muted: #98a3be;
+        --tp-border: #263148;
+        --tp-input-bg: #0f1625;
+        --tp-chip-bg: #1a2338;
+        --tp-primary: #6098ff;
+        --tp-shadow: rgba(0, 0, 0, 0.35);
+        --tp-radius: 20px;
+    }
+}
+
+/* ---------- 移动端微调 ---------- */
+@media (max-width: 640px) {
+    .tp-paid-card {
+        padding: 1.2rem 1rem;
+        border-radius: var(--tp-radius, 16px);
+    }
+
+    .tp-paid-title {
+        font-size: 1.14rem;
+    }
+
+    .tp-paid-price strong {
+        font-size: 1.16rem;
+    }
+
+    .tp-paid-plan-card {
+        flex-wrap: wrap;
+        gap: 0.35rem;
+    }
+}
+
+/* ---------- 版权 ---------- */
+.tp-paid-copyright {
+    margin-top: 1.2rem;
+    text-align: center;
+    font-size: 0.75rem;
+    color: var(--tp-muted, #999);
+    opacity: 0.65;
+}
+.tp-paid-copyright a {
+    color: inherit;
+    text-decoration: none;
+    font-weight: 600;
+    transition: color 0.2s ease;
+}
+.tp-paid-copyright a:hover {
+    color: var(--tp-primary, #2563eb);
+}
+

@@ -1,0 +1,409 @@
+/* ================================================================
+   TypechoPaid default5 — 居中窄栏 + 横向计划标签 + 大字价格
+   布局: 顶部预览 → 居中标题 → 横向计划 pill → 大字价格 → 窄表单
+   亮/暗模式由插件 data-mode / data-mode-switch 驱动
+   ================================================================ */
+
+/* ---------- 根变量（亮色） ---------- */
+.tp-paid-theme-default5 {
+  --tp-primary: #d4836a;
+  --tp-primary-soft: rgba(212, 131, 106, .12);
+  --tp-primary-glow: rgba(212, 131, 106, .2);
+  --tp-bg: #fff;
+  --tp-fg: #3a3533;
+  --tp-muted: #9e9692;
+  --tp-border: #ece7e3;
+  --tp-input-bg: #faf9f8;
+  --tp-chip-bg: #f7f4f2;
+  --tp-chip-hover: #f0ebe7;
+  --tp-shadow: rgba(60, 40, 30, .06);
+  --tp-radius: 1rem;
+  --tp-radius-lg: 1.25rem;
+  --tp-font: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  --tp-form-width: 420px;
+  position: relative;
+  font-family: var(--tp-font);
+  font-size: .95rem;
+  line-height: 1.7;
+  color: var(--tp-fg);
+}
+
+/* ---------- 卡片 ---------- */
+.tp-paid-theme-default5 .tp-paid-card {
+  border: 1px solid var(--tp-border);
+  border-radius: var(--tp-radius-lg);
+  padding: 3.5rem 2rem 2.8rem;
+  background: var(--tp-bg);
+  box-shadow: 0 2px 8px var(--tp-shadow), 0 16px 48px rgba(50, 35, 25, .07);
+  text-align: center;
+}
+
+/* ---------- 预览 ---------- */
+.tp-paid-theme-default5 .tp-paid-preview {
+  max-width: 640px;
+  margin: 0 auto 3rem;
+  filter: blur(4px);
+  opacity: .5;
+  user-select: none;
+  pointer-events: none;
+  line-height: 1.9;
+  font-size: .88rem;
+  color: var(--tp-muted);
+  text-align: left;
+}
+.tp-paid-theme-default5 .tp-paid-preview:empty { display: none; margin: 0; }
+
+/* ---------- 标题区：居中 hero ---------- */
+.tp-paid-theme-default5 .tp-paid-hero {
+  margin-bottom: 3rem;
+}
+.tp-paid-theme-default5 .tp-paid-title {
+  margin: 0 0 .65rem;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--tp-fg);
+  letter-spacing: -.02em;
+  line-height: 1.35;
+}
+.tp-paid-theme-default5 .tp-paid-desc {
+  margin: 0;
+  color: var(--tp-muted);
+  font-size: .95rem;
+  line-height: 1.75;
+  max-width: 480px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* ================================================================
+   计划标签行 — 横向 pill
+   ================================================================ */
+.tp-paid-theme-default5 .tp-paid-plan-strip {
+  margin-bottom: 2.6rem;
+}
+
+.tp-paid-theme-default5 .tp-paid-plan-label {
+  margin-bottom: .7rem;
+  color: var(--tp-muted);
+  font-size: .8rem;
+}
+
+.tp-paid-theme-default5 .tp-paid-plans {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: .55rem;
+}
+
+.tp-paid-theme-default5 .tp-paid-plan-card {
+  display: inline-flex;
+  align-items: center;
+  gap: .5rem;
+  padding: .55rem 1rem;
+  border: 1.5px solid var(--tp-border);
+  border-radius: 2rem;
+  background: var(--tp-chip-bg);
+  cursor: pointer;
+  transition: border-color .25s ease, background .25s ease, box-shadow .25s ease, transform .2s ease;
+}
+.tp-paid-theme-default5 .tp-paid-plan-card:hover {
+  border-color: var(--tp-primary);
+  background: var(--tp-chip-hover);
+  transform: translateY(-1px);
+}
+.tp-paid-theme-default5 .tp-paid-plan-card.is-selected {
+  border-color: var(--tp-primary);
+  background: var(--tp-primary-soft);
+  box-shadow: 0 0 0 3px var(--tp-primary-glow);
+}
+.tp-paid-theme-default5 .tp-paid-plan-card input[type=radio] {
+  accent-color: var(--tp-primary);
+  flex-shrink: 0;
+  margin: 0;
+}
+.tp-paid-theme-default5 .tp-paid-plan-name {
+  font-weight: 550;
+  font-size: .88rem;
+  color: var(--tp-fg);
+}
+.tp-paid-theme-default5 .tp-paid-plan-duration {
+  font-size: .72rem;
+  color: var(--tp-muted);
+  background: var(--tp-bg);
+  border-radius: 1rem;
+  padding: .1rem .5rem;
+  white-space: nowrap;
+}
+.tp-paid-theme-default5 .tp-paid-plan-price {
+  font-size: .85rem;
+  font-weight: 650;
+  color: var(--tp-primary);
+  white-space: nowrap;
+}
+
+/* ================================================================
+   价格舞台 — 大字居中
+   ================================================================ */
+.tp-paid-theme-default5 .tp-paid-price-stage {
+  margin-bottom: 2.6rem;
+}
+.tp-paid-theme-default5 .tp-paid-price-stage[data-show-price="0"] { display: none; }
+.tp-paid-theme-default5 .tp-paid-price-amount {
+  font-size: 3.2rem;
+  font-weight: 750;
+  color: var(--tp-primary);
+  letter-spacing: -.04em;
+  line-height: 1.1;
+}
+.tp-paid-theme-default5 .tp-paid-price-hint {
+  margin-top: .35rem;
+  font-size: .8rem;
+  color: var(--tp-muted);
+}
+
+/* ================================================================
+   表单区 — 窄栏居中
+   ================================================================ */
+.tp-paid-theme-default5 .tp-paid-form-wrap {
+  max-width: var(--tp-form-width);
+  margin: 0 auto;
+}
+
+.tp-paid-theme-default5 .tp-paid-form { margin-bottom: 0; }
+
+.tp-paid-theme-default5 .tp-paid-input {
+  width: 100%;
+  box-sizing: border-box;
+  height: 2.9rem;
+  padding: .55rem .9rem;
+  margin-bottom: .75rem;
+  border: 1.5px solid var(--tp-border);
+  border-radius: var(--tp-radius);
+  background: var(--tp-input-bg);
+  color: var(--tp-fg);
+  font-size: .9rem;
+  font-family: var(--tp-font);
+  outline: 0;
+  -webkit-appearance: none;
+  transition: border-color .25s ease, box-shadow .25s ease;
+}
+.tp-paid-theme-default5 .tp-paid-input:focus {
+  border-color: var(--tp-primary);
+  box-shadow: 0 0 0 4px var(--tp-primary-soft);
+}
+.tp-paid-theme-default5 .tp-paid-input::placeholder {
+  color: var(--tp-muted);
+  opacity: .55;
+}
+
+/* ---------- 支付方式 — 居中 pill ---------- */
+.tp-paid-theme-default5 .tp-paid-methods {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: .5rem;
+  margin-bottom: .6rem;
+}
+.tp-paid-theme-default5 .tp-paid-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: .3rem;
+  padding: .45rem 1rem;
+  border: 1.5px solid var(--tp-border);
+  border-radius: 2rem;
+  font-size: .82rem;
+  font-weight: 500;
+  color: var(--tp-fg);
+  background: var(--tp-input-bg);
+  cursor: pointer;
+  transition: border-color .25s ease, background .25s ease, color .25s ease;
+}
+.tp-paid-theme-default5 .tp-paid-chip:hover { border-color: var(--tp-primary); }
+.tp-paid-theme-default5 .tp-paid-chip:has(input:checked) {
+  border-color: var(--tp-primary);
+  color: var(--tp-primary);
+  background: var(--tp-primary-soft);
+}
+.tp-paid-theme-default5 .tp-paid-chip input {
+  accent-color: var(--tp-primary);
+  margin: 0;
+}
+
+/* ---------- 按钮 ---------- */
+.tp-paid-theme-default5 .tp-paid-btn {
+  width: 100%;
+  height: 3rem;
+  margin-top: .25rem;
+  border: none;
+  border-radius: var(--tp-radius);
+  padding: 0 1.5rem;
+  font-size: .95rem;
+  font-weight: 650;
+  font-family: var(--tp-font);
+  color: #fff;
+  background: var(--tp-primary);
+  cursor: pointer;
+  transition: opacity .25s ease, transform .15s ease, box-shadow .25s ease;
+  letter-spacing: .02em;
+  outline: 0;
+  -webkit-appearance: none;
+}
+.tp-paid-theme-default5 .tp-paid-btn:hover {
+  opacity: .9;
+  transform: translateY(-1px);
+  box-shadow: 0 8px 22px var(--tp-primary-glow);
+}
+.tp-paid-theme-default5 .tp-paid-btn:active:not(:disabled) { transform: scale(.985); }
+.tp-paid-theme-default5 .tp-paid-btn:disabled {
+  opacity: .4;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.tp-paid-theme-default5 .tp-paid-btn-verify {
+  background: #8c7b6f;
+}
+.tp-paid-theme-default5 .tp-paid-btn-verify:hover {
+  box-shadow: 0 8px 22px rgba(140, 123, 111, .25);
+}
+
+/* ---------- 二维码区 ---------- */
+.tp-paid-theme-default5 .tp-paid-payment-box {
+  display: none;
+  margin-top: 1.5rem;
+}
+.tp-paid-theme-default5 .tp-paid-payment-box:not(:empty) {
+  display: block;
+  padding: 1.2rem;
+  text-align: center;
+  border: 1px dashed var(--tp-border);
+  border-radius: var(--tp-radius);
+  background: var(--tp-input-bg);
+}
+.tp-paid-theme-default5 .tp-paid-payment-box canvas { max-width: 180px; }
+
+/* ---------- 底部链接 ---------- */
+.tp-paid-theme-default5 .tp-paid-switch-row {
+  margin-top: 1.4rem;
+  text-align: center;
+}
+.tp-paid-theme-default5 .tp-paid-link {
+  color: var(--tp-muted);
+  font-size: .82rem;
+  text-decoration: none;
+  border-bottom: 1px dashed var(--tp-border);
+  padding-bottom: .1rem;
+  transition: color .25s ease, border-color .25s ease;
+}
+.tp-paid-theme-default5 .tp-paid-link:hover {
+  color: var(--tp-primary);
+  border-color: var(--tp-primary);
+}
+
+/* ---------- 解锁视图 ---------- */
+.tp-paid-theme-default5 .tp-paid-unlock-view { display: none; }
+.tp-paid-theme-default5 .tp-paid-card.is-unlock-mode .tp-paid-unlock-view { display: block; }
+.tp-paid-theme-default5 .tp-paid-card.is-unlock-mode .tp-paid-buy-view { display: none; }
+
+.tp-paid-theme-default5 .tp-paid-unlock-header {
+  margin-bottom: 1.2rem;
+  text-align: left;
+}
+.tp-paid-theme-default5 .tp-paid-back {
+  display: inline-block;
+  color: var(--tp-muted);
+  font-size: .85rem;
+  text-decoration: none;
+  transition: color .25s ease;
+}
+.tp-paid-theme-default5 .tp-paid-back:hover { color: var(--tp-primary); }
+
+/* ---------- 消息 ---------- */
+.tp-paid-theme-default5 .tp-paid-msg {
+  margin: 1.2rem auto 0;
+  max-width: var(--tp-form-width);
+  padding: .7rem 1rem;
+  border-radius: var(--tp-radius);
+  font-size: .85rem;
+  line-height: 1.6;
+  display: none;
+}
+.tp-paid-theme-default5 .tp-paid-msg.is-ok {
+  display: block;
+  color: #8c9e7b;
+  background: rgba(140, 158, 123, .07);
+  border: 1px solid rgba(140, 158, 123, .18);
+}
+.tp-paid-theme-default5 .tp-paid-msg.is-err {
+  display: block;
+  color: #c5766a;
+  background: rgba(197, 118, 106, .07);
+  border: 1px solid rgba(197, 118, 106, .18);
+}
+
+/* ---------- 横幅 ---------- */
+.tp-paid-theme-default5 .tp-paid-banner {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: .9rem 1.1rem;
+  border-left: 3px solid var(--tp-primary);
+  border-radius: var(--tp-radius);
+  background: var(--tp-primary-soft);
+  color: var(--tp-fg);
+  font-size: .9rem;
+  text-align: left;
+}
+
+/* ================================================================
+   暗色模式
+   ================================================================ */
+.tp-paid-theme-default5.tp-paid-mode-dark {
+  --tp-primary: #e8987c;
+  --tp-primary-soft: rgba(232, 152, 124, .1);
+  --tp-primary-glow: rgba(232, 152, 124, .18);
+  --tp-bg: #1c1a19;
+  --tp-fg: #d4cfcc;
+  --tp-muted: #8a8582;
+  --tp-border: #363230;
+  --tp-input-bg: #242120;
+  --tp-chip-bg: #292624;
+  --tp-chip-hover: #33302d;
+  --tp-shadow: rgba(0, 0, 0, .4);
+  color: #d4cfcc;
+}
+.tp-paid-theme-default5.tp-paid-mode-dark .tp-paid-input {
+  border-color: #3d3835;
+  color: #d4cfcc;
+}
+.tp-paid-theme-default5.tp-paid-mode-dark .tp-paid-input:focus {
+  border-color: var(--tp-primary);
+}
+.tp-paid-theme-default5.tp-paid-mode-dark .tp-paid-input::placeholder {
+  color: #666;
+}
+.tp-paid-theme-default5.tp-paid-mode-dark .tp-paid-btn:hover {
+  box-shadow: 0 8px 22px var(--tp-primary-glow);
+}
+.tp-paid-theme-default5.tp-paid-mode-dark .tp-paid-payment-box:not(:empty) {
+  border-color: var(--tp-border);
+  background: var(--tp-input-bg);
+}
+
+/* ================================================================
+   响应式
+   ================================================================ */
+@media (max-width: 520px) {
+  .tp-paid-theme-default5 .tp-paid-card {
+    padding: 2.2rem 1rem 1.8rem;
+    border-radius: 1rem;
+  }
+  .tp-paid-theme-default5 .tp-paid-title { font-size: 1.25rem; }
+  .tp-paid-theme-default5 .tp-paid-hero { margin-bottom: 2rem; }
+  .tp-paid-theme-default5 .tp-paid-price-amount { font-size: 2.5rem; }
+  .tp-paid-theme-default5 .tp-paid-price-stage { margin-bottom: 2rem; }
+  .tp-paid-theme-default5 .tp-paid-plan-strip { margin-bottom: 2rem; }
+  .tp-paid-theme-default5 .tp-paid-preview { margin-bottom: 2rem; }
+  .tp-paid-theme-default5 .tp-paid-plans { gap: .4rem; }
+  .tp-paid-theme-default5 .tp-paid-plan-card { padding: .48rem .8rem; }
+}

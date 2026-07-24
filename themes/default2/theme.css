@@ -1,0 +1,382 @@
+/* ================================================================
+   TypechoPaid Mirages 主题 — 适配 Mirages 视觉风格
+   主色取自 --mirages-color-user-main（若未定义则回退 #1abc9c）
+   亮/暗模式完全由插件自身的 data-mode / data-mode-switch 驱动，
+   通过 .tp-paid-mode-dark class 切换。
+   ================================================================ */
+
+/* ---------- 根变量（亮色默认） ---------- */
+.tp-paid-theme-mirages {
+  --tp-primary: var(--mirages-color-user-main, #1abc9c);
+  --tp-bg: #fff;
+  --tp-fg: #333;
+  --tp-muted: #777;
+  --tp-border: #ececec;
+  --tp-border-strong: #ddd;
+  --tp-input-bg: #fff;
+  --tp-chip-bg: #fafafa;
+  --tp-chip-hover: #f0f0f0;
+  --tp-shadow: rgba(0, 0, 0, .06);
+  --tp-radius: 0.3125rem;
+  --tp-radius-btn: 100rem;
+  --tp-font: 'Open Sans', Helvetica, 'Microsoft Yahei', sans-serif;
+  position: relative;
+  font-family: var(--tp-font);
+  font-size: 1.125rem;
+  line-height: 2;
+  color: #555;
+}
+
+/* ---------- 卡片 ---------- */
+.tp-paid-theme-mirages .tp-paid-card {
+  border: 1px solid var(--tp-border);
+  border-radius: var(--tp-radius);
+  padding: 2rem 2rem 1.6rem;
+  background: var(--tp-bg);
+  box-shadow: 0 1px 1px var(--tp-shadow);
+  transition: box-shadow .3s ease;
+}
+.tp-paid-theme-mirages .tp-paid-card:hover {
+  box-shadow: 0 3px 12px rgba(0, 0, 0, .08);
+}
+
+/* ---------- 预览 ---------- */
+.tp-paid-theme-mirages .tp-paid-preview {
+  margin-bottom: 1.25rem;
+  filter: blur(3px);
+  opacity: .62;
+  user-select: none;
+  pointer-events: none;
+  line-height: 2;
+  color: var(--tp-fg);
+}
+.tp-paid-theme-mirages .tp-paid-preview:empty { display: none; margin: 0; }
+
+/* ---------- 标题 ---------- */
+.tp-paid-theme-mirages .tp-paid-title {
+  margin: 0 0 .5rem;
+  font-size: 1.25rem;
+  font-weight: 500;
+  color: var(--tp-fg);
+  letter-spacing: -.01em;
+  line-height: 1.5;
+}
+
+/* ---------- 描述 ---------- */
+.tp-paid-theme-mirages .tp-paid-desc {
+  margin: 0 0 1.25rem;
+  color: var(--tp-muted);
+  font-size: .9375rem;
+  line-height: 1.75;
+}
+
+/* ---------- 价格 ---------- */
+.tp-paid-theme-mirages .tp-paid-price {
+  margin: 0 0 1rem;
+  font-size: .9375rem;
+  color: var(--tp-muted);
+}
+.tp-paid-theme-mirages .tp-paid-price strong {
+  color: var(--tp-primary);
+  font-size: 1.35rem;
+  font-weight: 700;
+  margin: 0 .15rem;
+}
+.tp-paid-theme-mirages .tp-paid-price[data-show-price="0"] { display: none; }
+
+/* ---------- 计划标签 ---------- */
+.tp-paid-theme-mirages .tp-paid-plan-label {
+  margin: .25rem 0 .75rem;
+  color: var(--tp-muted);
+  font-size: .875rem;
+}
+.tp-paid-theme-mirages .tp-paid-plan-label strong { color: var(--tp-fg); }
+
+/* ---------- 计划卡片容器 ---------- */
+.tp-paid-theme-mirages .tp-paid-plans {
+  display: flex;
+  flex-direction: column;
+  gap: .5rem;
+  margin: 0 0 1rem;
+}
+
+/* ---------- 计划卡片 ---------- */
+.tp-paid-theme-mirages .tp-paid-plan-card {
+  display: flex;
+  align-items: center;
+  gap: .65rem;
+  padding: .65rem .8rem;
+  border: 1px solid var(--tp-border);
+  border-radius: var(--tp-radius);
+  background: var(--tp-chip-bg);
+  cursor: pointer;
+  transition: border-color .25s ease, background .25s ease, box-shadow .25s ease;
+}
+.tp-paid-theme-mirages .tp-paid-plan-card:hover {
+  border-color: var(--tp-primary);
+  background: var(--tp-chip-hover);
+}
+.tp-paid-theme-mirages .tp-paid-plan-card.is-selected {
+  border-color: var(--tp-primary);
+  background: rgba(26, 188, 156, .06);
+  box-shadow: inset 0 0 0 1px var(--tp-primary);
+}
+.tp-paid-theme-mirages .tp-paid-plan-card input[type=radio] {
+  accent-color: var(--tp-primary);
+  flex-shrink: 0;
+}
+.tp-paid-theme-mirages .tp-paid-plan-name {
+  flex: 1;
+  font-weight: 500;
+  font-size: .9375rem;
+  color: var(--tp-fg);
+}
+.tp-paid-theme-mirages .tp-paid-plan-duration {
+  font-size: .8125rem;
+  color: var(--tp-muted);
+  background: var(--tp-chip-bg);
+  border-radius: 1rem;
+  padding: .15rem .55rem;
+  white-space: nowrap;
+}
+.tp-paid-theme-mirages .tp-paid-plan-price {
+  font-size: .9375rem;
+  font-weight: 700;
+  color: var(--tp-primary);
+  white-space: nowrap;
+}
+
+/* ---------- 表单 ---------- */
+.tp-paid-theme-mirages .tp-paid-form { margin-bottom: 0; }
+.tp-paid-theme-mirages .tp-paid-row { margin-bottom: .85rem; }
+.tp-paid-theme-mirages .tp-paid-row:last-child { margin-bottom: 0; }
+
+/* ---------- 输入框 — 仿 Mirages comment-input ---------- */
+.tp-paid-theme-mirages .tp-paid-input {
+  width: 100%;
+  box-sizing: border-box;
+  height: 2.625rem;
+  padding: .438rem .625rem;
+  border: .125rem solid var(--tp-border);
+  border-radius: var(--tp-radius);
+  background: transparent;
+  color: var(--tp-fg);
+  font-size: .9375rem;
+  font-family: var(--tp-font);
+  line-height: 1.5;
+  outline: 0;
+  -webkit-appearance: none;
+  transition: border-color .25s ease;
+}
+.tp-paid-theme-mirages .tp-paid-input:focus {
+  border-color: var(--tp-primary);
+}
+.tp-paid-theme-mirages .tp-paid-input::placeholder {
+  color: var(--tp-muted);
+  opacity: .8;
+}
+
+/* ---------- 支付方式选项卡 ---------- */
+.tp-paid-theme-mirages .tp-paid-methods {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem;
+  margin-bottom: .15rem;
+}
+.tp-paid-theme-mirages .tp-paid-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: .3rem;
+  padding: .35rem .75rem;
+  border: 1px solid var(--tp-border);
+  border-radius: var(--tp-radius-btn);
+  font-size: .8125rem;
+  font-weight: 500;
+  color: var(--tp-fg);
+  background: var(--tp-chip-bg);
+  cursor: pointer;
+  transition: border-color .25s ease, background .25s ease, color .25s ease;
+}
+.tp-paid-theme-mirages .tp-paid-chip:hover {
+  border-color: var(--tp-primary);
+}
+.tp-paid-theme-mirages .tp-paid-chip:has(input:checked) {
+  border-color: var(--tp-primary);
+  color: var(--tp-primary);
+  background: rgba(26, 188, 156, .06);
+}
+.tp-paid-theme-mirages .tp-paid-chip input {
+  accent-color: var(--tp-primary);
+  margin: 0;
+}
+
+/* ---------- 主按钮 — 仿 Mirages 胶囊 + 渐变 ---------- */
+.tp-paid-theme-mirages .tp-paid-btn {
+  width: 100%;
+  height: 3rem;
+  border: none;
+  border-radius: var(--tp-radius-btn);
+  padding: 0 1.25rem;
+  font-size: .875rem;
+  font-weight: 500;
+  font-family: var(--tp-font);
+  color: #fff;
+  background: var(--tp-primary);
+  cursor: pointer;
+  transition: opacity .3s ease, transform .1s ease, box-shadow .3s ease;
+  letter-spacing: .02em;
+  outline: 0;
+  -webkit-appearance: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.tp-paid-theme-mirages .tp-paid-btn:hover {
+  opacity: .88;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(26, 188, 156, .28);
+}
+.tp-paid-theme-mirages .tp-paid-btn:active:not(:disabled) {
+  transform: scale(.985);
+}
+.tp-paid-theme-mirages .tp-paid-btn:disabled {
+  opacity: .45;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* 验证按钮 — 使用 info 蓝，与 Mirages .content-hint 左侧色呼应 */
+.tp-paid-theme-mirages .tp-paid-btn-verify {
+  background: #3884FF;
+}
+.tp-paid-theme-mirages .tp-paid-btn-verify:hover {
+  box-shadow: 0 4px 14px rgba(56, 132, 255, .28);
+}
+
+/* ---------- 支付二维码区 ---------- */
+.tp-paid-theme-mirages .tp-paid-payment-box {
+  margin-top: 1.25rem;
+  text-align: center;
+}
+.tp-paid-theme-mirages .tp-paid-payment-box canvas {
+  max-width: 200px;
+  border-radius: var(--tp-radius);
+}
+
+/* ---------- 底部链接区 ---------- */
+.tp-paid-theme-mirages .tp-paid-switch-row {
+  display: flex;
+  justify-content: center;
+  margin-top: 1rem;
+}
+.tp-paid-theme-mirages .tp-paid-link {
+  color: var(--tp-muted);
+  font-size: .8125rem;
+  text-decoration: none;
+  border-bottom: 1px dashed var(--tp-border);
+  transition: color .3s ease, border-color .3s ease;
+}
+.tp-paid-theme-mirages .tp-paid-link:hover {
+  color: var(--tp-primary);
+  border-color: var(--tp-primary);
+}
+
+/* ---------- 解锁视图 ---------- */
+.tp-paid-theme-mirages .tp-paid-unlock-view { display: none; }
+.tp-paid-theme-mirages .tp-paid-card.is-unlock-mode .tp-paid-unlock-view { display: block; }
+.tp-paid-theme-mirages .tp-paid-card.is-unlock-mode .tp-paid-buy-view { display: none; }
+.tp-paid-theme-mirages .tp-paid-back {
+  display: inline-block;
+  color: var(--tp-muted);
+  font-size: .8125rem;
+  text-decoration: none;
+  margin-bottom: .5rem;
+  transition: color .25s ease;
+}
+.tp-paid-theme-mirages .tp-paid-back:hover { color: var(--tp-primary); }
+
+/* ---------- 消息提示 ---------- */
+.tp-paid-theme-mirages .tp-paid-msg {
+  margin-top: .85rem;
+  padding: .6rem .85rem;
+  border-radius: var(--tp-radius);
+  font-size: .875rem;
+  line-height: 1.6;
+  display: none;
+}
+.tp-paid-theme-mirages .tp-paid-msg.is-ok {
+  display: block;
+  color: #26CB7C;
+  background: rgba(38, 203, 124, .08);
+  border: 1px solid rgba(38, 203, 124, .25);
+}
+.tp-paid-theme-mirages .tp-paid-msg.is-err {
+  display: block;
+  color: #FF4642;
+  background: rgba(255, 70, 66, .08);
+  border: 1px solid rgba(255, 70, 66, .2);
+}
+
+/* ---------- 横幅 ---------- */
+.tp-paid-theme-mirages .tp-paid-banner {
+  padding: .85rem 1rem;
+  border-left: .25rem solid #3884FF;
+  border-radius: var(--tp-radius);
+  background: rgba(56, 132, 255, .06);
+  color: var(--tp-fg);
+}
+
+/* ================================================================
+   暗色模式 — 由插件 applyThemeMode() 添加 .tp-paid-mode-dark
+   ================================================================ */
+.tp-paid-theme-mirages.tp-paid-mode-dark {
+  --tp-bg: #2c2a2a;
+  --tp-fg: #bcbcbc;
+  --tp-muted: #999;
+  --tp-border: #403E3E;
+  --tp-border-strong: #555;
+  --tp-input-bg: #2c2a2a;
+  --tp-chip-bg: #343232;
+  --tp-chip-hover: #403E3E;
+  --tp-shadow: rgba(0, 0, 0, .25);
+  background: #2c2a2a;
+  color: #bcbcbc;
+}
+.tp-paid-theme-mirages.tp-paid-mode-dark .tp-paid-input {
+  border-color: #555;
+  color: #bcbcbc;
+}
+.tp-paid-theme-mirages.tp-paid-mode-dark .tp-paid-input:focus {
+  border-color: var(--tp-primary);
+}
+.tp-paid-theme-mirages.tp-paid-mode-dark .tp-paid-input::placeholder {
+  color: #999;
+}
+
+/* 暗色下微调按钮 hover 阴影色 */
+.tp-paid-theme-mirages.tp-paid-mode-dark .tp-paid-btn:hover {
+  box-shadow: 0 4px 14px rgba(26, 188, 156, .22);
+}
+.tp-paid-theme-mirages.tp-paid-mode-dark .tp-paid-btn-verify:hover {
+  box-shadow: 0 4px 14px rgba(56, 132, 255, .22);
+}
+
+/* ================================================================
+   响应式 — 窄屏适配
+   ================================================================ */
+@media (max-width: 520px) {
+  .tp-paid-theme-mirages .tp-paid-card {
+    padding: 1.25rem 1rem 1rem;
+  }
+  .tp-paid-theme-mirages .tp-paid-title {
+    font-size: 1.125rem;
+  }
+  .tp-paid-theme-mirages .tp-paid-plan-card {
+    flex-wrap: wrap;
+    padding: .55rem .65rem;
+  }
+  .tp-paid-theme-mirages .tp-paid-plan-price {
+    margin-left: auto;
+  }
+}

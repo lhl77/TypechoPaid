@@ -1,0 +1,65 @@
+<div class="tp-paid-box tp-paid-theme-{{theme_id}}" style="{{theme_style_vars}}" data-theme-options="{{theme_options_json}}" data-mode="{{theme_mode}}" data-mode-switch="{{theme_mode_switch}}">
+  <div class="tp-paid-card" data-status-action="{{status_action}}">
+    <!-- 购买视图 -->
+    <div class="tp-paid-buy-view">
+      <!-- 顶部预览 -->
+      <div class="tp-paid-preview">{{preview}}</div>
+
+      <!-- 标题区：居中 -->
+      <div class="tp-paid-hero">
+        <h3 class="tp-paid-title">{{title}}</h3>
+        <p class="tp-paid-desc">{{desc}}</p>
+      </div>
+
+      <!-- 计划标签行：横向 pill -->
+      <div class="tp-paid-plan-strip">
+        {{plan_label}}
+        {{plan_html}}
+      </div>
+
+      <!-- 价格展示区：大字居中 -->
+      <div class="tp-paid-price-stage" data-show-price="{{show_price}}" data-role="price-display">
+        <div class="tp-paid-price-amount">￥{{price}}</div>
+        <div class="tp-paid-price-hint">一次购买 · 永久阅读</div>
+      </div>
+
+      <!-- 表单区：窄栏居中 -->
+      <div class="tp-paid-form-wrap">
+        <form class="tp-paid-form" method="post" action="{{create_action}}" data-create-action="{{create_action}}" onsubmit="return TypechoPaid.submitCreate(this);">
+          <input type="hidden" name="cid" value="{{cid}}">
+          <input type="hidden" name="subscribe_action" value="{{subscribe_action}}">
+          <input type="hidden" name="plan_key" value="">
+          <input class="tp-paid-input" type="email" name="email" placeholder="电子邮箱地址" required>
+          <input class="tp-paid-input" type="text" name="visit_password" placeholder="访问密码（选填）">
+          <div class="tp-paid-methods">{{methods_html}}</div>
+          {{turnstile_html}}
+          <button class="tp-paid-btn" type="submit"{{buy_disabled}}>立即购买</button>
+        </form>
+
+        <div class="tp-paid-payment-box" data-role="payment-box"></div>
+
+        <div class="tp-paid-switch-row">
+          <a href="javascript:;" class="tp-paid-link" onclick="return TypechoPaid.toggleUnlock(this);">已经购买？点此验证</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- 解锁视图 -->
+    <div class="tp-paid-unlock-view">
+      <div class="tp-paid-form-wrap">
+        <div class="tp-paid-unlock-header">
+          <a href="javascript:;" class="tp-paid-back" onclick="return TypechoPaid.backToBuy(this);">← 返回购买页</a>
+        </div>
+        <form class="tp-paid-form" method="post" action="{{unlock_action}}" onsubmit="return TypechoPaid.submitUnlock(this);">
+          <input type="hidden" name="cid" value="{{cid}}">
+          <input class="tp-paid-input" type="email" name="email" placeholder="电子邮箱地址" required>
+          <input class="tp-paid-input" type="text" name="credential" placeholder="访问密码 / 商户订单号（填一个即可）">
+          <button class="tp-paid-btn tp-paid-btn-verify" type="submit">验证并解锁</button>
+        </form>
+      </div>
+    </div>
+
+    <div class="tp-paid-msg" data-role="msg"></div>
+    <div class="tp-paid-copyright">Powered By <a href="https://github.com/lhl77/TypechoPaid" target="_blank" rel="noopener">Paid</a></div>
+  </div>
+</div>

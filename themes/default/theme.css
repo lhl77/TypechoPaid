@@ -1,0 +1,156 @@
+.tp-paid-theme-default {
+  --tp-bg: #ffffff;
+  --tp-fg: #152238;
+  --tp-muted: #6b7890;
+  --tp-border: #dbe4f1;
+  --tp-input-bg: #fbfcff;
+  --tp-chip-bg: #f4f7fc;
+  --tp-primary: #2376e5;
+  --tp-shadow: rgba(30, 55, 95, 0.12);
+  --tp-radius: 18px;
+  position: relative;
+}
+
+.tp-paid-theme-default .tp-paid-card {
+  position: relative;
+  overflow: hidden;
+  padding: clamp(1.25rem, 3vw, 2.25rem);
+  border-color: color-mix(in srgb, var(--tp-border) 88%, var(--tp-primary));
+  background:
+    radial-gradient(circle at 100% 0, color-mix(in srgb, var(--tp-primary) 12%, transparent) 0, transparent 31%),
+    var(--tp-bg);
+  box-shadow: 0 20px 50px var(--tp-shadow), 0 2px 8px rgba(23, 43, 77, .05);
+}
+
+.tp-paid-theme-default .tp-paid-card::before {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 4px;
+  background: linear-gradient(180deg, var(--tp-primary), color-mix(in srgb, var(--tp-primary) 45%, #a855f7));
+}
+
+.tp-paid-theme-default .tp-paid-title {
+  font-size: clamp(1.3rem, 3vw, 1.65rem);
+  letter-spacing: -.035em;
+  margin-bottom: .55rem;
+}
+
+.tp-paid-theme-default .tp-paid-title::before {
+  content: 'PRO';
+  display: inline-flex;
+  align-items: center;
+  vertical-align: middle;
+  margin: 0 .55rem .14rem 0;
+  padding: .18rem .42rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--tp-primary) 12%, transparent);
+  color: var(--tp-primary);
+  font-size: .6rem;
+  font-weight: 800;
+  letter-spacing: .1em;
+}
+
+.tp-paid-theme-default .tp-paid-desc { max-width: 42rem; margin-bottom: 1.4rem; }
+.tp-paid-theme-default .tp-paid-price {
+  display: inline-flex;
+  align-items: baseline;
+  gap: .35rem;
+  margin: 0 0 1.1rem;
+  padding: .55rem .8rem;
+  border: 1px solid color-mix(in srgb, var(--tp-primary) 18%, var(--tp-border));
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--tp-primary) 5%, var(--tp-chip-bg));
+}
+.tp-paid-theme-default .tp-paid-price strong { color: var(--tp-primary); }
+
+.tp-paid-theme-default .tp-paid-plan-label {
+  margin: 0 0 .8rem;
+  color: var(--tp-muted);
+  font-size: .88rem;
+}
+.tp-paid-theme-default .tp-paid-plan-label strong { color: var(--tp-fg); }
+.tp-paid-theme-default .tp-paid-plans { gap: .7rem; margin: .2rem 0 1.25rem; }
+.tp-paid-theme-default .tp-paid-plan-card {
+  min-height: 3.8rem;
+  padding: .75rem .9rem;
+  border-radius: 14px;
+  background: var(--tp-input-bg);
+  transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease, background .18s ease;
+}
+.tp-paid-theme-default .tp-paid-plan-card:hover {
+  transform: translateY(-1px);
+  border-color: color-mix(in srgb, var(--tp-primary) 55%, var(--tp-border));
+  box-shadow: 0 8px 18px color-mix(in srgb, var(--tp-primary) 12%, transparent);
+}
+.tp-paid-theme-default .tp-paid-plan-card.is-selected {
+  border-color: var(--tp-primary);
+  background: color-mix(in srgb, var(--tp-primary) 8%, var(--tp-bg));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--tp-primary) 12%, transparent);
+}
+.tp-paid-theme-default .tp-paid-plan-price { color: var(--tp-primary); font-size: 1.03rem; }
+
+.tp-paid-theme-default .tp-paid-input {
+  padding: .8rem .95rem;
+  border-radius: 12px;
+  border-color: var(--tp-border);
+}
+.tp-paid-theme-default .tp-paid-input:focus { box-shadow: 0 0 0 4px color-mix(in srgb, var(--tp-primary) 16%, transparent); }
+.tp-paid-theme-default .tp-paid-chip {
+  border-radius: 999px;
+  border-color: var(--tp-border);
+  background: var(--tp-chip-bg);
+}
+.tp-paid-theme-default .tp-paid-chip:has(input:checked) {
+  border-color: var(--tp-primary);
+  color: var(--tp-primary);
+  background: color-mix(in srgb, var(--tp-primary) 9%, var(--tp-bg));
+}
+.tp-paid-theme-default .tp-paid-btn {
+  min-height: 3rem;
+  border-radius: 13px;
+  font-weight: 750;
+  letter-spacing: .01em;
+  background: linear-gradient(135deg, var(--tp-primary), color-mix(in srgb, var(--tp-primary) 72%, #6d4aff));
+  box-shadow: 0 10px 20px color-mix(in srgb, var(--tp-primary) 24%, transparent);
+}
+.tp-paid-theme-default .tp-paid-btn:hover { transform: translateY(-1px); filter: saturate(1.08) brightness(1.02); }
+.tp-paid-theme-default .tp-paid-btn-verify {
+  background: linear-gradient(135deg, #159b72, #22b789);
+  box-shadow: 0 10px 20px rgba(21, 155, 114, .22);
+}
+.tp-paid-theme-default .tp-paid-btn-verify:hover { filter: saturate(1.08) brightness(1.03); }
+.tp-paid-theme-default .tp-paid-payment-box { margin-top: 1.4rem; }
+.tp-paid-theme-default .tp-paid-switch-row { display:flex; justify-content:center; margin-top: 1.2rem; }
+.tp-paid-theme-default .tp-paid-link { color: var(--tp-primary); font-weight: 650; }
+
+.tp-paid-theme-default.tp-paid-mode-dark {
+  --tp-bg: #111a2a;
+  --tp-fg: #f2f6ff;
+  --tp-muted: #a7b4ca;
+  --tp-border: #2b3b57;
+  --tp-input-bg: #162238;
+  --tp-chip-bg: #1b2940;
+  --tp-primary: #6ba8ff;
+  --tp-shadow: rgba(0, 0, 0, .42);
+}
+
+@media (prefers-color-scheme: dark) {
+  .tp-paid-theme-default:not(.tp-paid-mode-light):not(.tp-paid-mode-dark) {
+    --tp-bg: #111a2a;
+    --tp-fg: #f2f6ff;
+    --tp-muted: #a7b4ca;
+    --tp-border: #2b3b57;
+    --tp-input-bg: #162238;
+    --tp-chip-bg: #1b2940;
+    --tp-primary: #6ba8ff;
+    --tp-shadow: rgba(0, 0, 0, .42);
+  }
+}
+
+@media (max-width: 520px) {
+  .tp-paid-theme-default .tp-paid-card { padding: 1.1rem; border-radius: 15px; }
+  .tp-paid-theme-default .tp-paid-plan-card { min-height: 3.45rem; padding: .65rem .72rem; }
+  .tp-paid-theme-default .tp-paid-plan-duration { font-size: .75rem; }
+  .tp-paid-theme-default .tp-paid-price { margin-bottom: .9rem; }
+}

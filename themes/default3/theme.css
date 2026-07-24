@@ -1,0 +1,403 @@
+/* ================================================================
+   TypechoPaid default3 主题 — 留白 · 呼吸感
+   亮/暗模式由插件 data-mode / data-mode-switch 驱动
+   ================================================================ */
+
+/* ---------- 根变量（亮色） ---------- */
+.tp-paid-theme-default3 {
+  --tp-primary: #5b6e8a;
+  --tp-bg: #fff;
+  --tp-fg: #3a3a3a;
+  --tp-muted: #9a9a9a;
+  --tp-border: #eae6e0;
+  --tp-border-strong: #ddd9d2;
+  --tp-input-bg: #fafaf9;
+  --tp-chip-bg: #f6f4f1;
+  --tp-chip-hover: #efebe7;
+  --tp-shadow: rgba(60, 50, 40, .045);
+  --tp-radius: 1.5rem;
+  --tp-radius-sm: .875rem;
+  --tp-font: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  position: relative;
+  font-family: var(--tp-font);
+  font-size: 1rem;
+  line-height: 1.8;
+  color: var(--tp-fg);
+}
+
+/* ---------- 卡片 — 大量留白 ---------- */
+.tp-paid-theme-default3 .tp-paid-card {
+  border: 1px solid var(--tp-border);
+  border-radius: var(--tp-radius);
+  padding: 2.8rem 2.6rem 2.4rem;
+  background: var(--tp-bg);
+  box-shadow:
+    0 1px 2px var(--tp-shadow),
+    0 8px 32px rgba(60, 50, 40, .05);
+  transition: box-shadow .35s ease;
+}
+.tp-paid-theme-default3 .tp-paid-card:hover {
+  box-shadow:
+    0 1px 2px var(--tp-shadow),
+    0 14px 44px rgba(60, 50, 40, .07);
+}
+
+/* ---------- 预览 — 更宽的模糊过渡 ---------- */
+.tp-paid-theme-default3 .tp-paid-preview {
+  margin-bottom: 2rem;
+  filter: blur(4px);
+  opacity: .55;
+  user-select: none;
+  pointer-events: none;
+  line-height: 2;
+  color: var(--tp-muted);
+}
+.tp-paid-theme-default3 .tp-paid-preview:empty { display: none; margin: 0; }
+
+/* ---------- 标题 ---------- */
+.tp-paid-theme-default3 .tp-paid-title {
+  margin: 0 0 .75rem;
+  font-size: 1.35rem;
+  font-weight: 600;
+  color: var(--tp-fg);
+  letter-spacing: -.01em;
+  line-height: 1.45;
+}
+
+/* ---------- 描述 ---------- */
+.tp-paid-theme-default3 .tp-paid-desc {
+  margin: 0 0 2rem;
+  color: var(--tp-muted);
+  font-size: .95rem;
+  line-height: 1.85;
+}
+
+/* ---------- 价格 — 留白标签式 ---------- */
+.tp-paid-theme-default3 .tp-paid-price {
+  margin: 0 0 1.8rem;
+  font-size: .9rem;
+  color: var(--tp-muted);
+  letter-spacing: .02em;
+}
+.tp-paid-theme-default3 .tp-paid-price strong {
+  color: var(--tp-primary);
+  font-size: 1.55rem;
+  font-weight: 650;
+  margin-left: .35rem;
+}
+.tp-paid-theme-default3 .tp-paid-price[data-show-price="0"] { display: none; }
+
+/* ---------- 计划标签 ---------- */
+.tp-paid-theme-default3 .tp-paid-plan-label {
+  margin: 0 0 1rem;
+  color: var(--tp-muted);
+  font-size: .85rem;
+  line-height: 1.7;
+}
+.tp-paid-theme-default3 .tp-paid-plan-label strong { color: var(--tp-fg); }
+
+/* ---------- 计划卡片容器 — 大间距 ---------- */
+.tp-paid-theme-default3 .tp-paid-plans {
+  display: flex;
+  flex-direction: column;
+  gap: .8rem;
+  margin: 0 0 1.8rem;
+}
+
+/* ---------- 计划卡片 — 宽松布局 ---------- */
+.tp-paid-theme-default3 .tp-paid-plan-card {
+  display: flex;
+  align-items: center;
+  gap: .85rem;
+  padding: .9rem 1.05rem;
+  border: 1px solid var(--tp-border);
+  border-radius: var(--tp-radius-sm);
+  background: var(--tp-input-bg);
+  cursor: pointer;
+  transition: border-color .3s ease, background .3s ease, box-shadow .3s ease;
+}
+.tp-paid-theme-default3 .tp-paid-plan-card:hover {
+  border-color: var(--tp-primary);
+  background: var(--tp-chip-hover);
+}
+.tp-paid-theme-default3 .tp-paid-plan-card.is-selected {
+  border-color: var(--tp-primary);
+  background: color-mix(in srgb, var(--tp-primary) 6%, var(--tp-bg));
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--tp-primary) 14%, transparent);
+}
+.tp-paid-theme-default3 .tp-paid-plan-card input[type=radio] {
+  accent-color: var(--tp-primary);
+  flex-shrink: 0;
+  transform: scale(1.1);
+}
+.tp-paid-theme-default3 .tp-paid-plan-name {
+  flex: 1;
+  font-weight: 550;
+  font-size: .95rem;
+  color: var(--tp-fg);
+}
+.tp-paid-theme-default3 .tp-paid-plan-duration {
+  font-size: .78rem;
+  color: var(--tp-muted);
+  background: var(--tp-chip-bg);
+  border-radius: .75rem;
+  padding: .18rem .6rem;
+  white-space: nowrap;
+}
+.tp-paid-theme-default3 .tp-paid-plan-price {
+  font-size: .95rem;
+  font-weight: 650;
+  color: var(--tp-primary);
+  white-space: nowrap;
+}
+
+/* ---------- 表单 — 宽间距 ---------- */
+.tp-paid-theme-default3 .tp-paid-form { margin-bottom: 0; }
+.tp-paid-theme-default3 .tp-paid-row { margin-bottom: 1.1rem; }
+.tp-paid-theme-default3 .tp-paid-row:last-child { margin-bottom: 0; }
+
+/* ---------- 输入框 — 宽松内边距 ---------- */
+.tp-paid-theme-default3 .tp-paid-input {
+  width: 100%;
+  box-sizing: border-box;
+  height: 3rem;
+  padding: .65rem .95rem;
+  border: 1.5px solid var(--tp-border);
+  border-radius: var(--tp-radius-sm);
+  background: var(--tp-input-bg);
+  color: var(--tp-fg);
+  font-size: .95rem;
+  font-family: var(--tp-font);
+  line-height: 1.6;
+  outline: 0;
+  -webkit-appearance: none;
+  transition: border-color .3s ease, box-shadow .3s ease, background .3s ease;
+}
+.tp-paid-theme-default3 .tp-paid-input:focus {
+  border-color: var(--tp-primary);
+  background: var(--tp-bg);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--tp-primary) 10%, transparent);
+}
+.tp-paid-theme-default3 .tp-paid-input::placeholder {
+  color: var(--tp-muted);
+  opacity: .7;
+}
+
+/* ---------- 支付方式选项卡 — 留白间距 ---------- */
+.tp-paid-theme-default3 .tp-paid-methods {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .65rem;
+  margin-bottom: .25rem;
+}
+.tp-paid-theme-default3 .tp-paid-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: .35rem;
+  padding: .5rem 1rem;
+  border: 1.5px solid var(--tp-border);
+  border-radius: var(--tp-radius-sm);
+  font-size: .85rem;
+  font-weight: 500;
+  color: var(--tp-fg);
+  background: var(--tp-input-bg);
+  cursor: pointer;
+  transition: border-color .3s ease, background .3s ease, color .3s ease;
+}
+.tp-paid-theme-default3 .tp-paid-chip:hover {
+  border-color: var(--tp-primary);
+  background: var(--tp-chip-hover);
+}
+.tp-paid-theme-default3 .tp-paid-chip:has(input:checked) {
+  border-color: var(--tp-primary);
+  color: var(--tp-primary);
+  background: color-mix(in srgb, var(--tp-primary) 6%, var(--tp-bg));
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--tp-primary) 10%, transparent);
+}
+.tp-paid-theme-default3 .tp-paid-chip input {
+  accent-color: var(--tp-primary);
+  margin: 0;
+}
+
+/* ---------- 主按钮 — 柔和圆角 ---------- */
+.tp-paid-theme-default3 .tp-paid-btn {
+  width: 100%;
+  height: 3.15rem;
+  border: none;
+  border-radius: var(--tp-radius-sm);
+  padding: 0 1.5rem;
+  font-size: .95rem;
+  font-weight: 600;
+  font-family: var(--tp-font);
+  color: #fff;
+  background: var(--tp-primary);
+  cursor: pointer;
+  transition: opacity .3s ease, transform .15s ease, box-shadow .3s ease;
+  letter-spacing: .03em;
+  outline: 0;
+  -webkit-appearance: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.tp-paid-theme-default3 .tp-paid-btn:hover {
+  opacity: .9;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px color-mix(in srgb, var(--tp-primary) 24%, transparent);
+}
+.tp-paid-theme-default3 .tp-paid-btn:active:not(:disabled) {
+  transform: scale(.985);
+}
+.tp-paid-theme-default3 .tp-paid-btn:disabled {
+  opacity: .4;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* 验证按钮 */
+.tp-paid-theme-default3 .tp-paid-btn-verify {
+  background: #718096;
+}
+.tp-paid-theme-default3 .tp-paid-btn-verify:hover {
+  box-shadow: 0 6px 20px rgba(113, 128, 150, .24);
+}
+
+/* ---------- 支付二维码区 — 空时隐藏，有内容才显示 ---------- */
+.tp-paid-theme-default3 .tp-paid-payment-box {
+  display: none;
+  margin-top: 1.8rem;
+}
+.tp-paid-theme-default3 .tp-paid-payment-box:not(:empty) {
+  display: block;
+  padding: 1.2rem;
+  text-align: center;
+  border: 1px dashed var(--tp-border);
+  border-radius: var(--tp-radius-sm);
+  background: var(--tp-input-bg);
+}
+.tp-paid-theme-default3 .tp-paid-payment-box canvas {
+  max-width: 200px;
+  border-radius: var(--tp-radius-sm);
+}
+
+/* ---------- 底部链接区 ---------- */
+.tp-paid-theme-default3 .tp-paid-switch-row {
+  display: flex;
+  justify-content: center;
+  margin-top: 1.6rem;
+}
+.tp-paid-theme-default3 .tp-paid-link {
+  color: var(--tp-muted);
+  font-size: .85rem;
+  text-decoration: none;
+  border-bottom: 1px dashed var(--tp-border);
+  padding-bottom: .15rem;
+  transition: color .3s ease, border-color .3s ease;
+}
+.tp-paid-theme-default3 .tp-paid-link:hover {
+  color: var(--tp-primary);
+  border-color: var(--tp-primary);
+}
+
+/* ---------- 解锁视图 ---------- */
+.tp-paid-theme-default3 .tp-paid-unlock-view { display: none; }
+.tp-paid-theme-default3 .tp-paid-card.is-unlock-mode .tp-paid-unlock-view { display: block; }
+.tp-paid-theme-default3 .tp-paid-card.is-unlock-mode .tp-paid-buy-view { display: none; }
+.tp-paid-theme-default3 .tp-paid-back {
+  display: inline-block;
+  color: var(--tp-muted);
+  font-size: .85rem;
+  text-decoration: none;
+  margin-bottom: .75rem;
+  transition: color .3s ease;
+}
+.tp-paid-theme-default3 .tp-paid-back:hover { color: var(--tp-primary); }
+
+/* ---------- 消息提示 — 柔和色调 ---------- */
+.tp-paid-theme-default3 .tp-paid-msg {
+  margin-top: 1.1rem;
+  padding: .75rem 1rem;
+  border-radius: var(--tp-radius-sm);
+  font-size: .88rem;
+  line-height: 1.7;
+  display: none;
+}
+.tp-paid-theme-default3 .tp-paid-msg.is-ok {
+  display: block;
+  color: #5b8c5a;
+  background: rgba(91, 140, 90, .06);
+  border: 1px solid rgba(91, 140, 90, .18);
+}
+.tp-paid-theme-default3 .tp-paid-msg.is-err {
+  display: block;
+  color: #c56565;
+  background: rgba(197, 101, 101, .06);
+  border: 1px solid rgba(197, 101, 101, .15);
+}
+
+/* ---------- 横幅 ---------- */
+.tp-paid-theme-default3 .tp-paid-banner {
+  padding: 1rem 1.2rem;
+  border-left: 3px solid var(--tp-primary);
+  border-radius: var(--tp-radius-sm);
+  background: color-mix(in srgb, var(--tp-primary) 5%, var(--tp-input-bg));
+  color: var(--tp-fg);
+  font-size: .92rem;
+}
+
+/* ================================================================
+   暗色模式
+   ================================================================ */
+.tp-paid-theme-default3.tp-paid-mode-dark {
+  --tp-primary: #8ea4bd;
+  --tp-bg: #1e1e1e;
+  --tp-fg: #d4d4d4;
+  --tp-muted: #8a8a8a;
+  --tp-border: #353535;
+  --tp-border-strong: #444;
+  --tp-input-bg: #252525;
+  --tp-chip-bg: #2a2a2a;
+  --tp-chip-hover: #353535;
+  --tp-shadow: rgba(0, 0, 0, .3);
+  color: #d4d4d4;
+}
+.tp-paid-theme-default3.tp-paid-mode-dark .tp-paid-input {
+  border-color: #3d3d3d;
+  color: #d4d4d4;
+}
+.tp-paid-theme-default3.tp-paid-mode-dark .tp-paid-input:focus {
+  border-color: var(--tp-primary);
+}
+.tp-paid-theme-default3.tp-paid-mode-dark .tp-paid-input::placeholder {
+  color: #6a6a6a;
+}
+.tp-paid-theme-default3.tp-paid-mode-dark .tp-paid-btn:hover {
+  box-shadow: 0 6px 20px color-mix(in srgb, var(--tp-primary) 18%, transparent);
+}
+.tp-paid-theme-default3.tp-paid-mode-dark .tp-paid-btn-verify:hover {
+  box-shadow: 0 6px 20px rgba(142, 164, 189, .18);
+}
+.tp-paid-theme-default3.tp-paid-mode-dark .tp-paid-payment-box:not(:empty) {
+  border-color: var(--tp-border);
+  background: var(--tp-input-bg);
+}
+
+/* ================================================================
+   响应式 — 窄屏保持留白
+   ================================================================ */
+@media (max-width: 520px) {
+  .tp-paid-theme-default3 .tp-paid-card {
+    padding: 1.8rem 1.15rem 1.5rem;
+    border-radius: 1.15rem;
+  }
+  .tp-paid-theme-default3 .tp-paid-title { font-size: 1.15rem; }
+  .tp-paid-theme-default3 .tp-paid-desc { margin-bottom: 1.4rem; }
+  .tp-paid-theme-default3 .tp-paid-plan-card {
+    flex-wrap: wrap;
+    padding: .72rem .8rem;
+  }
+  .tp-paid-theme-default3 .tp-paid-plan-price { margin-left: auto; }
+  .tp-paid-theme-default3 .tp-paid-price { margin-bottom: 1.3rem; }
+  .tp-paid-theme-default3 .tp-paid-plans { margin-bottom: 1.3rem; }
+}
