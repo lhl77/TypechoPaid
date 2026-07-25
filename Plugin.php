@@ -6,7 +6,7 @@ if (!defined('__TYPECHO_ROOT_DIR__')) exit;
  *
  * @package TypechoPaid
  * @author LHL
- * @version 1.0.0
+ * @version 1.0.1
  * @link https://github.com/lhl77/TypechoPaid
  */
 class TypechoPaid_Plugin implements Typecho_Plugin_Interface
@@ -75,8 +75,13 @@ class TypechoPaid_Plugin implements Typecho_Plugin_Interface
 
     public static function config(Typecho_Widget_Helper_Form $form)
     {
+        $isGet = empty($_POST);
+
+        // 每次进入 config() 重置分组状态，防止重复调用时累积
+        self::$configSections = array();
+
         // 置顶信息卡片（仅 GET 显示，避免影响 POST 保存）
-        if (empty($_POST)) {
+        if ($isGet) {
             echo self::renderCardsWrapperOpen();
             echo self::renderInfoCard(false, true);
             echo self::renderDocPromo();
@@ -85,7 +90,7 @@ class TypechoPaid_Plugin implements Typecho_Plugin_Interface
         }
 
         // ======================== 💰 支付与订阅 ========================
-        self::renderConfigCard(_t('支付与订阅'), _t('配置支付通道、订阅计划与购买行为'), array('payment_channels','subscription_plans','cookie_days','sandbox_auto_paid'));
+        self::renderConfigCard(_t('支付与订阅'), _t('配置支付通道、订阅计划与购买行为'), array('payment_channels','subscription_plans','cookie_days','sandbox_auto_paid'), $isGet);
 
         $paymentChannels = new Typecho_Widget_Helper_Form_Element_Textarea(
             'payment_channels',
@@ -123,7 +128,7 @@ class TypechoPaid_Plugin implements Typecho_Plugin_Interface
         );
         $form->addInput($sandboxAutoPaid);
 
-        self::renderConfigCard(_t('购买卡片外观'), _t('自定义前台付费卡片的主题、文案与亮暗模式'), array('default_theme','default_paid_desc','theme_advanced_options','paid_theme_mode','paid_theme_mode_switch'));
+        self::renderConfigCard(_t('购买卡片外观'), _t('自定义前台付费卡片的主题、文案与亮暗模式'), array('default_theme','default_paid_desc','theme_advanced_options','paid_theme_mode','paid_theme_mode_switch'), $isGet);
 
         $themeOptions = array();
         $themes = self::listThemes();
@@ -180,7 +185,7 @@ class TypechoPaid_Plugin implements Typecho_Plugin_Interface
         $form->addInput($themeModeSwitch);
 
         // ======================== 📖 正文预览 ========================
-        self::renderConfigCard(_t('正文预览'), _t('控制付费文章在前台的预览段落展示'), array('preview_enable','preview_length'));
+        self::renderConfigCard(_t('正文预览'), _t('控制付费文章在前台的预览段落展示'), array('preview_enable','preview_length'), $isGet);
 
         $previewEnable = new Typecho_Widget_Helper_Form_Element_Radio(
             'preview_enable',
@@ -201,7 +206,7 @@ class TypechoPaid_Plugin implements Typecho_Plugin_Interface
         $form->addInput($previewLength->addRule('isInteger', _t('必须是整数')));
 
         // ======================== 🛡️ 安全验证 ========================
-        self::renderConfigCard(_t('安全验证'), _t('Cloudflare Turnstile 人机验证防刷'), array('turnstile_enable','turnstile_site_key','turnstile_secret_key','turnstile_daily_threshold'));
+        self::renderConfigCard(_t('安全验证'), _t('Cloudflare Turnstile 人机验证防刷'), array('turnstile_enable','turnstile_site_key','turnstile_secret_key','turnstile_daily_threshold'), $isGet);
 
         $turnstileEnable = new Typecho_Widget_Helper_Form_Element_Radio(
             'turnstile_enable',
@@ -240,7 +245,7 @@ class TypechoPaid_Plugin implements Typecho_Plugin_Interface
         $form->addInput($turnstileThreshold->addRule('isInteger', _t('必须是整数')));
 
         // ======================== 📧 邮件通知 ========================
-        self::renderConfigCard(_t('邮件通知'), _t('SMTP 邮件发送配置，购买成功后通知用户'), array('smtp_enable','smtp_host','smtp_port','smtp_encryption','smtp_username','smtp_password','smtp_from_email','smtp_from_name'));
+        self::renderConfigCard(_t('邮件通知'), _t('SMTP 邮件发送配置，购买成功后通知用户'), array('smtp_enable','smtp_host','smtp_port','smtp_encryption','smtp_username','smtp_password','smtp_from_email','smtp_from_name'), $isGet);
 
         $smtpEnable = new Typecho_Widget_Helper_Form_Element_Radio(
             'smtp_enable',
@@ -266,7 +271,9 @@ class TypechoPaid_Plugin implements Typecho_Plugin_Interface
         $smtpFromName = new Typecho_Widget_Helper_Form_Element_Text('smtp_from_name', null, 'TypechoPaid通知', _t('发件人名称'));
         $form->addInput($smtpFromName);
 
-        self::renderConfigCardJS();
+        if ($isGet) {
+            self::renderConfigCardJS(true);
+        }
     }
 
     public static function personalConfig(Typecho_Widget_Helper_Form $form)
@@ -289,7 +296,7 @@ class TypechoPaid_Plugin implements Typecho_Plugin_Interface
         echo '<script>'
             . '(function(){'
             . 'var _t0=typeof performance!=="undefined"?performance.now():Date.now();'
-            . 'var _v="1.0.0";'
+            . 'var _v="1.0.1";'
             . 'var _u="https://github.com/lhl77/TypechoPaid";'
             . 'var _done=false;'
             . 'function _tp(label){'
@@ -1240,13 +1247,17 @@ SCRIPT;
      * @param string $desc       面板描述
      * @param array  $fieldNames 该分组的表单字段名列表（name 属性）
      */
-    public static function renderConfigCard($title, $desc, $fieldNames = array())
+    public static function renderConfigCard($title, $desc, $fieldNames = array(), $echo = true)
     {
         static $styleInjected = false;
         static $sectionIndex = 0;
         $sectionId = 'tp-config-section-' . (++$sectionIndex);
 
         self::$configSections[] = array('id' => $sectionId, 'fields' => $fieldNames);
+
+        if (!$echo) {
+            return;
+        }
 
         if (!$styleInjected) {
             $styleInjected = true;
@@ -1305,13 +1316,15 @@ SCRIPT;
      * 注入设置面板折叠 JS，按字段名将表单项移入对应面板
      * 应在 config() 末尾、所有 renderConfigCard 调用之后调用一次
      */
-    public static function renderConfigCardJS()
+    public static function renderConfigCardJS($echo = true)
     {
         static $injected = false;
         if ($injected) return;
-        $injected = true;
         if (empty(self::$configSections)) return;
 
+        if (!$echo) return;
+
+        $injected = true;
         $sectionsJson = json_encode(self::$configSections, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 
         echo '<script>'
@@ -1575,7 +1588,7 @@ html[data-theme="dark"] .tp-doc-promo-close:hover{background:rgba(255,255,255,.0
      */
     public static function renderInfoCard($showSettings = true, $showSponsor = false)
     {
-        $version = '1.0.0';
+        $version = '1.0.1';
         $authorUrl = 'https://lhl.one';
         $author = 'LHL';
         $github = 'https://github.com/lhl77/TypechoPaid';
