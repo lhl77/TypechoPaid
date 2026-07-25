@@ -11,8 +11,11 @@
 [![Stars](https://img.shields.io/github/stars/lhl77/TypechoPaid?style=flat&logo=github)](https://github.com/lhl77/TypechoPaid/stargazers)
 
 </div>
-
-[文档](https://blog.lhl.one/artical/1309.html)
+<p align="center">
+  快捷链接：
+  <a href="https://blog.lhl.one/artical/1309.html">文档</a> | 
+  <a href="https://github.com/lhl77/TypechoPaid/issues">问题反馈</a>
+</p>
 
 ---
 
@@ -79,57 +82,7 @@ git clone https://github.com/lhl77/TypechoPaid.git TypechoPaid
 
 ## 支付通道配置
 
-在插件设置的「支付通道定义」中，每行一个通道，格式：
-
-```text
-支付通道名称|支付驱动:配置1:配置2:配置3...
-```
-
-<details>
-<summary><b>支付宝当面付</b></summary>
-
-```
-支付宝扫码|alipay_face:https://gateway.example.com/pay:AppId:通知验签Key
-```
-
-| 配置项 | 说明 |
-|--------|------|
-| 网关地址 | 支付宝当面付网关 URL |
-| AppId | 支付宝分配的 AppId |
-| 通知验签 Key | MD5 签名密钥 |
-
-</details>
-
-<details>
-<summary><b>微信支付</b></summary>
-
-```
-微信支付|wechat:https://gateway.example.com/pay:商户号:通知验签Key
-```
-
-| 配置项 | 说明 |
-|--------|------|
-| 网关地址 | 微信支付网关 URL |
-| 商户号 | 微信商户号 |
-| 通知验签 Key | MD5 签名密钥 |
-
-</details>
-
-<details>
-<summary><b>易支付</b></summary>
-
-```
-易支付|epay:https://pay.example.com:商户PID:商户Key:alipay
-```
-
-| 配置项 | 说明 |
-|--------|------|
-| 域名 | 只填域名，不要带 `submit.php` 或 `mapi.php` |
-| 商户 PID | 易支付平台分配的商户号 |
-| 商户 Key | 易支付平台分配的通信密钥 |
-| 支付类型 | 可选 `alipay` / `wechat` / `qqpay`，默认 `alipay` |
-
-</details>
+支付通道配置详见 [文档](https://blog.lhl.one/artical/1309.html) 中「支付通道」章节。
 
 ---
 
@@ -183,7 +136,8 @@ sdk/
 └── Drivers/
     ├── AlipayFace.php      # 支付宝当面付
     ├── Wechat.php          # 微信支付
-    └── Epay.php            # 易支付
+    ├── Epay.php            # 易支付
+    └── Other.php           # 其他支付方式
 ```
 
 新增驱动步骤：
@@ -201,6 +155,13 @@ interface TypechoPaid_PaymentInterface
 ```
 
 ---
+
+## 捐助
+
+| <img src="https://i.see.you/2026/03/05/yc0T/4ca32aa36972b03bd14c1e480972db55.jpg" width="50%" /> |
+| ------------------------------------------------------------ |
+| <p align="center">微信赞赏码</p>                             |
+备注：[TypechoPaid]+[昵称]+[博客地址/Github地址]可将您的捐赠记录显示下方。
 
 ## 许可证
 
