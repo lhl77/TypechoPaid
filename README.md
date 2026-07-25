@@ -128,7 +128,7 @@ interface TypechoPaid_PaymentInterface
 ## 其他详细说明请看顶部文档。
 
 ## 截图
-!()[https://i.see.you/2026/07/21/jAm9/64e6599354023dfdd98bfb7bbd77971d.webp]
+![](https://i.see.you/2026/07/21/jAm9/64e6599354023dfdd98bfb7bbd77971d.webp)
 ---
 
 ## 捐助
