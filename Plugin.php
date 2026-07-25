@@ -6,7 +6,7 @@ if (!defined('__TYPECHO_ROOT_DIR__')) exit;
  *
  * @package TypechoPaid
  * @author LHL
- * @version 1.0.1
+ * @version 1.0.2
  * @link https://github.com/lhl77/TypechoPaid
  */
 class TypechoPaid_Plugin implements Typecho_Plugin_Interface
@@ -306,7 +306,7 @@ class TypechoPaid_Plugin implements Typecho_Plugin_Interface
         echo '<script>'
             . '(function(){'
             . 'var _t0=typeof performance!=="undefined"?performance.now():Date.now();'
-            . 'var _v="1.0.1";'
+            . 'var _v="1.0.2";'
             . 'var _u="https://github.com/lhl77/TypechoPaid";'
             . 'var _done=false;'
             . 'function _tp(label){'
@@ -873,9 +873,22 @@ SCRIPT;
         if (empty($methods)) {
             $methods = array_keys($channels);
         }
-        $methods = array_values(array_filter($methods, function ($method) use ($channels) {
-            return isset($channels[$method]);
-        }));
+        // 展开简写驱动名到复合 key（如 epay → epay:alipay, epay:wxpay）
+        $expanded = array();
+        foreach ($methods as $method) {
+            if (isset($channels[$method])) {
+                $expanded[] = $method;
+            } else {
+                $prefix = $method . ':';
+                foreach (array_keys($channels) as $key) {
+                    if (strpos($key, $prefix) === 0) {
+                        $expanded[] = $key;
+                    }
+                }
+                // 如果简写名未匹配到任何复合 key，且也不是精确 key，则丢弃
+            }
+        }
+        $methods = array_values(array_unique($expanded));
 
         $themeValue = isset($widget->fields->paid_theme) ? trim((string)$widget->fields->paid_theme) : '';
         $themeId = self::resolveThemeId($themeValue === '' ? self::getOption('default_theme', 'default') : $themeValue);
@@ -1605,7 +1618,7 @@ html[data-theme="dark"] .tp-doc-promo-close:hover{background:rgba(255,255,255,.0
      */
     public static function renderInfoCard($showSettings = true, $showSponsor = false)
     {
-        $version = '1.0.1';
+        $version = '1.0.2';
         $authorUrl = 'https://lhl.one';
         $author = 'LHL';
         $github = 'https://github.com/lhl77/TypechoPaid';
@@ -1851,11 +1864,23 @@ html[data-theme="dark"] .tp-infocard-update-result{border-top-color:var(--md-dar
             list($name, $definition) = explode('|', $line, 2);
             $parts = self::splitEscapedChannelConfig(trim($definition));
             $driver = isset($parts[0]) ? strtolower(trim($parts[0])) : '';
-            if ($driver === '' || isset($channels[$driver])) {
+            if ($driver === '') {
                 continue;
             }
 
-            $channels[$driver] = array(
+            // 生成唯一 key：epay 驱动按 type 参数区分（如 epay:alipay、epay:wxpay），其他驱动使用驱动名本身
+            $key = $driver;
+            if ($driver === 'epay' && isset($parts[4])) {
+                $type = strtolower(trim($parts[4]));
+                if ($type !== '') {
+                    $key = $driver . ':' . $type;
+                }
+            }
+            if (isset($channels[$key])) {
+                continue;
+            }
+
+            $channels[$key] = array(
                 'name' => trim($name) === '' ? self::methodLabel($driver) : trim($name),
                 'driver' => $driver,
                 'configs' => array_slice($parts, 1)

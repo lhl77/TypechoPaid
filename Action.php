@@ -78,7 +78,22 @@ class TypechoPaid_Action extends Widget_Abstract_Contents implements Widget_Inte
         if (empty($methods)) {
             $methods = array_keys($channels);
         }
-        if (!empty($methods) && !in_array($channel, $methods)) {
+        // 展开简写驱动名到复合 key（如 epay → epay:alipay, epay:wxpay），与 filterContent 保持一致
+        $expandedMethods = array();
+        foreach ($methods as $method) {
+            if (isset($channels[$method])) {
+                $expandedMethods[] = $method;
+            } else {
+                $prefix = $method . ':';
+                foreach (array_keys($channels) as $key) {
+                    if (strpos($key, $prefix) === 0) {
+                        $expandedMethods[] = $key;
+                    }
+                }
+            }
+        }
+        $methods = array_values(array_unique($expandedMethods));
+        if (!empty($methods) && !in_array($channel, $methods, true)) {
             $this->response->throwJson(array('success' => 0, 'msg' => '该文章未启用此支付渠道'));
         }
 
