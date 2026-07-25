@@ -80,6 +80,11 @@ class TypechoPaid_Plugin implements Typecho_Plugin_Interface
         // 每次进入 config() 重置分组状态，防止重复调用时累积
         self::$configSections = array();
 
+        // 用输出缓冲隔离所有视觉输出，防止干扰 Typecho 表单处理
+        if ($isGet) {
+            ob_start();
+        }
+
         // 置顶信息卡片（仅 GET 显示，避免影响 POST 保存）
         if ($isGet) {
             echo self::renderCardsWrapperOpen();
@@ -273,6 +278,11 @@ class TypechoPaid_Plugin implements Typecho_Plugin_Interface
 
         if ($isGet) {
             self::renderConfigCardJS(true);
+        }
+
+        // 输出缓冲：将卡片的视觉 HTML 在表单构建完毕后统一输出
+        if ($isGet) {
+            ob_end_flush();
         }
     }
 
@@ -1335,6 +1345,7 @@ SCRIPT;
             . 'var form=document.querySelector(".typecho-page-main form");'
             . 'if(!form)form=document.querySelector("form");'
             . 'if(!form)return;'
+            . 'if(!form.id){form.id="tp-config-form";}'
             . 'for(var i=0;i<SECTIONS.length;i++){'
             . 'var sec=SECTIONS[i];'
             . 'var wrapper=document.getElementById(sec.id);'
@@ -1347,7 +1358,13 @@ SCRIPT;
             . 'var el=form.querySelector("[name=\'"+name+"\']");'
             . 'if(!el)continue;'
             . 'var opt=el.closest(".typecho-option,.typecho-option-title");'
-            . 'if(opt)body.appendChild(opt);'
+            . 'if(opt){'
+            . 'body.appendChild(opt);'
+            . 'var controls=opt.querySelectorAll("input,select,textarea,button");'
+            . 'for(var k=0;k<controls.length;k++){'
+            . 'controls[k].setAttribute("form","tp-config-form");'
+            . '}'
+            . '}'
             . '}'
             . '}'
             . '},'
