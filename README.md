@@ -125,6 +125,7 @@ interface TypechoPaid_PaymentInterface
     public function verifyNotify(array $request, array $channel);
 }
 ```
+## 其他详细说明请看顶部文档。
 
 ---
 
