@@ -484,3 +484,47 @@
     color: var(--tp-primary, #2563eb);
 }
 
+/* ===== [Paid] 短代码内联占位符 ===== */
+.tp-paid-inline-placeholder {
+    margin: 1.4em 0;
+    padding: 1.8em 1.2em;
+    border: 2px dashed var(--tp-border, #dbdbe0);
+    border-radius: var(--tp-radius, 12px);
+    text-align: center;
+    background: var(--tp-chip-bg, var(--tp-bg, #f8f8fc));
+    color: var(--tp-muted, #6b6b78);
+    font-size: 0.92em;
+    line-height: 1.6;
+    transition: background 0.25s, border-color 0.25s, color 0.25s;
+}
+.tp-paid-inline-placeholder:hover {
+    border-color: var(--tp-primary, #6366f1);
+    background: color-mix(in srgb, var(--tp-primary, #6366f1) 4%, var(--tp-chip-bg, var(--tp-bg, #f8f8fc)));
+}
+.tp-paid-placeholder-icon {
+    display: block;
+    margin: 0 auto 10px;
+    width: 30px;
+    height: 30px;
+    opacity: 0.45;
+}
+.tp-paid-placeholder-text {
+    display: block;
+    font-weight: 500;
+}
+
+/* 亮色模式微调 */
+.tp-paid-mode-light .tp-paid-inline-placeholder {
+    border-color: var(--tp-border, #dbdbe0);
+    background: var(--tp-chip-bg, var(--tp-bg, #f5f5f7));
+}
+
+/* 暗色模式 */
+.tp-paid-mode-dark .tp-paid-inline-placeholder {
+    border-color: var(--tp-border, #3a3a44);
+    background: color-mix(in srgb, var(--tp-primary, #6366f1) 5%, var(--tp-chip-bg, var(--tp-bg, #1a1a22)));
+    color: var(--tp-muted, #a0a0b0);
+}
+.tp-paid-mode-dark .tp-paid-placeholder-icon {
+    opacity: 0.55;
+}

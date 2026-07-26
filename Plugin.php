@@ -6,7 +6,7 @@ if (!defined('__TYPECHO_ROOT_DIR__')) exit;
  *
  * @package TypechoPaid
  * @author LHL
- * @version 1.0.2
+ * @version 1.0.3
  * @link https://github.com/lhl77/TypechoPaid
  */
 class TypechoPaid_Plugin implements Typecho_Plugin_Interface
@@ -15,6 +15,7 @@ class TypechoPaid_Plugin implements Typecho_Plugin_Interface
     const ROUTE_PATH = '/typechopaid/[do:string]';
     const MENU_NAME = 'TypechoPaid';
     const COOKIE_NAME = 'typechopaid_unlock';
+    const SPONSOR_URL = 'https://see.lhl.one/sponsor';
 
     public static function activate()
     {
@@ -83,6 +84,15 @@ class TypechoPaid_Plugin implements Typecho_Plugin_Interface
         // 用输出缓冲隔离所有视觉输出，防止干扰 Typecho 表单处理
         if ($isGet) {
             ob_start();
+        }
+
+        // 赞助链接完整性校验（仅 GET 显示，避免影响 POST 保存）
+        if ($isGet) {
+            $sponsorWarning = '';
+            if (!self::isSponsorUrlIntact(self::SPONSOR_URL)) {
+                $sponsorWarning = '<div style="padding:12px 16px;margin:0 0 16px;border-radius:12px;background:#dc2626;color:#fff;font-size:13px;font-weight:600;text-align:center;line-height:1.6;width:100%!important;max-width:100%!important;flex:0 0 100%!important;box-sizing:border-box!important;">⚠ 检测到安全隐患：赞助链接已被篡改，请停止使用并从官方渠道重新获取插件</div>';
+            }
+            echo $sponsorWarning;
         }
 
         // 置顶信息卡片（仅 GET 显示，避免影响 POST 保存）
@@ -278,6 +288,8 @@ class TypechoPaid_Plugin implements Typecho_Plugin_Interface
 
         if ($isGet) {
             self::renderConfigCardJS(true);
+            // 赞赏与鸣谢卡片（放在最底部）
+            echo self::renderSponsorCard();
         }
 
         // 输出缓冲：将卡片的视觉 HTML 在表单构建完毕后统一输出
@@ -306,7 +318,7 @@ class TypechoPaid_Plugin implements Typecho_Plugin_Interface
         echo '<script>'
             . '(function(){'
             . 'var _t0=typeof performance!=="undefined"?performance.now():Date.now();'
-            . 'var _v="1.0.2";'
+            . 'var _v="1.0.3";'
             . 'var _u="https://github.com/lhl77/TypechoPaid";'
             . 'var _done=false;'
             . 'function _tp(label){'
@@ -358,7 +370,7 @@ class TypechoPaid_Plugin implements Typecho_Plugin_Interface
         }
     }
     function applyThemeMode(){
-        var boxes=document.querySelectorAll('.tp-paid-box[data-mode]');
+        var boxes=document.querySelectorAll('.tp-paid-box[data-mode], .tp-paid-inline-placeholder[data-mode]');
         function readDataTheme(){
             var dt=(document.documentElement.getAttribute('data-theme')||'').toLowerCase();
             if(dt==='dark'){return'dark';}
@@ -436,6 +448,14 @@ class TypechoPaid_Plugin implements Typecho_Plugin_Interface
             }catch(e){node.textContent='付费内容加载失败，请刷新后重试。';}
         }
         applyThemeMode();
+        // 确保第一个付费卡片有 id="tp-paid-card" 锚点，供部分付费跳转使用
+        (function(){
+            var existing=document.getElementById("tp-paid-card");
+            if(!existing){
+                var firstCard=document.querySelector(".tp-paid-card");
+                if(firstCard&&!firstCard.id){firstCard.id="tp-paid-card";}
+            }
+        })();
         // 确保 body observer 已注册（首次 IIFE 执行时 body 可能尚未就绪）
         if(window._tpNeedBodyObs&&document.body&&window.MutationObserver){
             var bodyMo=new MutationObserver(function(mutations){
@@ -522,7 +542,15 @@ class TypechoPaid_Plugin implements Typecho_Plugin_Interface
             el.innerHTML=msg||'';el.className='tp-paid-msg'+(ok?' is-ok':' is-err');
         },
         renderTurnstileWidgets:function(){
-            if(!window.turnstile){return;}
+            if(!window.turnstile){
+                this._turnstileRetries=this._turnstileRetries||0;
+                if(this._turnstileRetries<60){
+                    this._turnstileRetries++;
+                    setTimeout(function(){if(window.TypechoPaid)window.TypechoPaid.renderTurnstileWidgets();},500);
+                }
+                return;
+            }
+            this._turnstileRetries=0;
             var nodes=document.querySelectorAll('.cf-turnstile:not([data-tp-rendered])');
             for(var i=0;i<nodes.length;i++){
                 nodes[i].setAttribute('data-tp-rendered','1');
@@ -534,6 +562,9 @@ class TypechoPaid_Plugin implements Typecho_Plugin_Interface
             var node=form.querySelector('.cf-turnstile');
             if(!node){return;}
             try{window.turnstile.reset(node);}catch(e){}
+            // 重置后需要重新渲染
+            node.removeAttribute('data-tp-rendered');
+            try{window.turnstile.render(node);node.setAttribute('data-tp-rendered','1');}catch(e){}
         },
         toggleUnlock:function(link){
             var card=link.closest('.tp-paid-card');if(!card){return false;}
@@ -737,9 +768,16 @@ SCRIPT;
         $configuredMethods = implode(',', array_keys(self::getPaymentChannels()));
         $defaultTheme = self::getOption('default_theme', 'default');
         $defaultDesc = self::getOption('default_paid_desc', '该文章为付费阅读内容，请先购买后查看全文。');
+
+        $abEnabled = false;
+        try {
+            $plugins = Typecho_Plugin::export();
+            $abEnabled = isset($plugins['activated']['AdminBeautify']);
+        } catch (\Exception $e) {}
         ?>
         <script>
         (function () {
+        var _isABAdmin = <?php echo $abEnabled ? 'true' : 'false'; ?>;
             function addPaidField(name, placeholder, value) {
                 var names = document.querySelectorAll('input[name="fieldNames[]"]');
                 for (var i = 0; i < names.length; i++) {
@@ -802,6 +840,87 @@ SCRIPT;
                 }
             }
 
+            // ======== [Paid] 短代码编辑器按钮 ========
+            function insertPaidShortcode() {
+                var textarea = document.getElementById('text');
+                if (!textarea) return;
+
+                var shortcode = '[Paid]\n\n[Paid /]';
+                // 尝试现代 API
+                try {
+                    textarea.focus();
+                    if (document.execCommand('insertText', false, shortcode)) {
+                        return;
+                    }
+                } catch (e) {}
+
+                // Fallback: 手动拼接
+                var start = textarea.selectionStart;
+                var end = textarea.selectionEnd;
+                var before = textarea.value.substring(0, start);
+                var selected = textarea.value.substring(start, end);
+                var after = textarea.value.substring(end);
+
+                if (selected) {
+                    // 有选中文字 → 包裹在 [Paid] 内
+                    textarea.value = before + '[Paid]\n' + selected + '\n[Paid /]' + after;
+                    textarea.selectionStart = start + 7; // '[Paid]\n'.length
+                    textarea.selectionEnd = start + 7 + selected.length;
+                } else {
+                    // 无选中 → 光标放在短代码中间
+                    textarea.value = before + shortcode + after;
+                    var cursor = start + 7; // '[Paid]\n'.length
+                    textarea.selectionStart = cursor;
+                    textarea.selectionEnd = cursor;
+                }
+                textarea.focus();
+            }
+
+            function mountPaidToolbarBtn() {
+                if (document.getElementById('wmd-typechopaid-paid-button')) return;
+
+                // 策略 1: Markdown 编辑器工具栏 (#wmd-button-row)
+                var row = document.getElementById('wmd-button-row');
+                if (row) {
+                    var buttons = row.querySelectorAll('.wmd-button');
+                    var maxLeft = 0;
+                    for (var i = 0; i < buttons.length; i++) {
+                        var left = parseFloat(buttons[i].style.left) || 0;
+                        if (left > maxLeft) maxLeft = left;
+                    }
+
+                    var li = document.createElement('li');
+                    li.className = 'wmd-button';
+                    li.id = 'wmd-typechopaid-paid-button';
+                    li.title = '插入 Paid 付费内容短代码';
+                    li.setAttribute('aria-label', '插入 Paid 付费内容短代码');
+                    li.style.left = (maxLeft + 25) + 'px';
+                    if (_isABAdmin) {
+                        li.innerHTML = '<i class="material-icons-round" style="font-size:20px;line-height:1;display:block;background:none;background-image:none;">lock</i>';
+                    } else {
+                        li.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:block;width:20px;height:20px;color:#6366f1;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>';
+                    }
+                    li.addEventListener('click', function (e) { e.preventDefault(); insertPaidShortcode(); });
+                    row.appendChild(li);
+                    return;
+                }
+
+                // 策略 2: 其他编辑器 — 在 .url-slug 之后插入按钮
+                var slug = document.querySelector('.url-slug');
+                if (slug && slug.parentNode) {
+                    var btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.id = 'wmd-typechopaid-paid-button';
+                    btn.className = 'btn btn-xs';
+                    btn.style.cssText = 'margin-right:5px;color:#6366f1;font-weight:700;';
+                    btn.textContent = '[Paid]';
+                    btn.title = '插入 [Paid] 付费内容短代码';
+                    btn.addEventListener('click', function (e) { e.preventDefault(); insertPaidShortcode(); });
+                    slug.parentNode.insertBefore(btn, slug.nextSibling);
+                }
+            }
+
+            // ======== 初始化 ========
             function boot() {
                 ensureExpand();
                 addPaidField('paid_enable', '1 开启付费阅读，0 关闭', '0');
@@ -811,6 +930,7 @@ SCRIPT;
                 addPaidField('paid_desc', '留空使用插件默认提示文案：<?php echo htmlspecialchars($defaultDesc, ENT_QUOTES, 'UTF-8'); ?>', '');
                 addPaidField('paid_plan', '订阅计划标识（如 monthly）；留空则为单篇付费', '');
                 addPaidField('paid_theme_options', '主题高级设置：字段:值（一行一个）', '');
+                mountPaidToolbarBtn();
             }
 
             if (document.readyState === 'loading') {
@@ -833,6 +953,17 @@ SCRIPT;
 
         // 先判断是否为付费文章（非付费文章原样返回，不受 RSS 等影响）
         if (!isset($widget->fields) || !isset($widget->fields->paid_enable) || intval($widget->fields->paid_enable) !== 1) {
+            return $text;
+        }
+
+        // 检测短代码 [Paid]…[Paid /] — 部分付费模式
+        $hasPaidTag = (strpos($text, '[Paid]') !== false);
+        if ($hasPaidTag) {
+            return self::handlePartialPaidContent($text, $widget);
+        }
+
+        // 文章作者本人登录后免付费查看（全篇付费模式）
+        if (self::isCurrentUserAuthor($widget)) {
             return $text;
         }
 
@@ -1050,6 +1181,357 @@ SCRIPT;
         $html = '<span class="tp-paid-placeholder" data-tp-paid="' . htmlspecialchars($payload, ENT_QUOTES, 'UTF-8') . '"></span>';
 
         return $html;
+    }
+
+    /**
+     * 判断当前登录用户是否为文章作者
+     * @param Widget_Archive $widget
+     * @return bool
+     */
+    public static function isCurrentUserAuthor($widget)
+    {
+        if (!isset($widget->authorId)) {
+            return false;
+        }
+        try {
+            $user = Typecho_Widget::widget('Widget_User');
+            return $user->hasLogin() && intval($user->uid) === intval($widget->authorId);
+        } catch (\Exception $e) {
+            return false;
+        }
+    }
+
+    /**
+     * 处理 [Paid] 短代码 — 部分付费模式
+     * @param string $text
+     * @param Widget_Archive $widget
+     * @return string
+     */
+    public static function handlePartialPaidContent($text, $widget)
+    {
+        $cid = intval($widget->cid);
+        $isFeed = method_exists($widget, 'is') && $widget->is('feed');
+        $isSingle = method_exists($widget, 'is') && ($widget->is('single') || $widget->is('page'));
+
+        // 解析短代码
+        $blocks = self::parsePaidBlocks($text);
+
+        // 作者或已解锁用户 → 显示全部内容（移除短代码标签）
+        if (self::isCurrentUserAuthor($widget) || self::isUnlockedByCookie($cid, isset($widget->fields) ? $widget->fields : null)) {
+            $banner = self::isUnlockedByCookie($cid, isset($widget->fields) ? $widget->fields : null)
+                ? self::buildUnlockBanner($cid, isset($widget->fields) ? $widget->fields : null) : '';
+            $out = '';
+            foreach ($blocks as $block) {
+                $out .= $block['content'];
+            }
+            return $banner . $out;
+        }
+
+        // RSS 模式
+        if ($isFeed) {
+            return self::renderPartialFeedContent($blocks, $widget);
+        }
+
+        // 列表/归档模式
+        if (!$isSingle) {
+            return self::renderPartialListContent($blocks, $widget);
+        }
+
+        // 单页模式 — 渲染部分付费
+        return self::renderPartialSingleContent($blocks, $widget);
+    }
+
+    /**
+     * 解析 [Paid]…[Paid /] 短代码块
+     * @return array 每个元素包含 type ('free'|'paid') 和 content
+     */
+    private static function parsePaidBlocks($text)
+    {
+        $blocks = array();
+        $pattern = '/\[Paid\s*\](.*?)\[Paid\s*\/\]/s';
+        $lastPos = 0;
+
+        if (preg_match_all($pattern, $text, $matches, PREG_SET_ORDER | PREG_OFFSET_CAPTURE)) {
+            foreach ($matches as $m) {
+                $content = $m[1][0];
+                $startPos = $m[0][1];
+                $endPos = $startPos + strlen($m[0][0]);
+
+                // 短代码之前的普通内容 — 免费
+                if ($startPos > $lastPos) {
+                    $before = substr($text, $lastPos, $startPos - $lastPos);
+                    $before = trim($before);
+                    if ($before !== '') {
+                        $blocks[] = array('type' => 'free', 'content' => $before);
+                    }
+                }
+
+                // 短代码内内容 — 付费
+                $blocks[] = array('type' => 'paid', 'content' => $content);
+
+                $lastPos = $endPos;
+            }
+        }
+
+        // 最后的普通内容 — 免费
+        if ($lastPos < strlen($text)) {
+            $after = substr($text, $lastPos);
+            $after = trim($after);
+            if ($after !== '') {
+                $blocks[] = array('type' => 'free', 'content' => $after);
+            }
+        }
+
+        // 没有任何短代码匹配 → 整个内容为免费
+        if (empty($blocks)) {
+            $blocks[] = array('type' => 'free', 'content' => $text);
+        }
+
+        return $blocks;
+    }
+
+    /**
+     * RSS 部分付费渲染
+     */
+    private static function renderPartialFeedContent($blocks, $widget)
+    {
+        $tip = isset($widget->fields->paid_desc) && trim($widget->fields->paid_desc) !== ''
+            ? trim($widget->fields->paid_desc)
+            : self::getOption('default_paid_desc', '付费内容，请购买后查看。');
+        $permalink = htmlspecialchars($widget->permalink);
+        $out = '';
+        foreach ($blocks as $block) {
+            if ($block['type'] === 'free') {
+                $out .= $block['content'];
+            } else {
+                $out .= '<p><strong>[' . _t('付费阅读') . ']</strong> ' . htmlspecialchars($tip) . '</p>';
+            }
+        }
+        $out .= '<p><a href="' . $permalink . '">' . _t('点击访问原文查看完整内容') . '</a></p>';
+        return $out;
+    }
+
+    /**
+     * 列表/归档模式部分付费渲染
+     */
+    private static function renderPartialListContent($blocks, $widget)
+    {
+        $tip = isset($widget->fields->paid_desc) && trim($widget->fields->paid_desc) !== ''
+            ? trim($widget->fields->paid_desc)
+            : self::getOption('default_paid_desc', '该文章为付费阅读内容，请先购买后查看全文。');
+        $permalink = htmlspecialchars($widget->permalink);
+        $out = '';
+        $hasPaid = false;
+        foreach ($blocks as $block) {
+            if ($block['type'] === 'free') {
+                $out .= $block['content'];
+            } else {
+                $hasPaid = true;
+            }
+        }
+        if ($hasPaid) {
+            $out .= '<p><strong>[' . _t('付费阅读') . ']</strong> ' . htmlspecialchars($tip) . '</p>'
+                . '<p><a href="' . $permalink . '">' . _t('点击访问原文') . '</a></p>';
+        }
+        return $out;
+    }
+
+    /**
+     * 单页部分付费渲染（占位符内联，购买卡片放在文章底部）
+     */
+    private static function renderPartialSingleContent($blocks, $widget)
+    {
+        $cid = intval($widget->cid);
+
+        // 获取主题信息（与 buildPartialPaidCard 共享）
+        $themeValue = isset($widget->fields->paid_theme) ? trim((string)$widget->fields->paid_theme) : '';
+        $themeId = self::resolveThemeId($themeValue === '' ? self::getOption('default_theme', 'default') : $themeValue);
+        $globalThemeOptions = self::parseLineOptions(self::getOption('theme_advanced_options', ''));
+        $contentThemeOptions = self::parseLineOptions(isset($widget->fields->paid_theme_options) ? $widget->fields->paid_theme_options : '');
+        $themeOptions = array_merge($globalThemeOptions, $contentThemeOptions);
+        $themeVars = self::buildThemeStyleVars($themeOptions);
+        $themeMode = (string)self::getOption('paid_theme_mode', 'auto');
+        $themeModeSwitch = trim((string)self::getOption('paid_theme_mode_switch', 'system'));
+        if ($themeModeSwitch === '') $themeModeSwitch = 'system';
+
+        $contentHtml = '';
+        $hasPaid = false;
+
+        foreach ($blocks as $block) {
+            if ($block['type'] === 'free') {
+                $contentHtml .= $block['content'];
+            } else {
+                $hasPaid = true;
+                $contentHtml .= self::renderPaidPlaceholder($themeId, $themeVars, $themeMode, $themeModeSwitch);
+            }
+        }
+
+        if (!$hasPaid) {
+            return $contentHtml;
+        }
+
+        // 文章末尾放购买卡片
+        $paidCardHtml = self::buildPartialPaidCard($widget);
+        return $contentHtml . $paidCardHtml;
+    }
+
+    /**
+     * 内联付费内容占位符（适配主题亮暗色）
+     */
+    private static function renderPaidPlaceholder($themeId, $themeVars, $themeMode, $themeModeSwitch)
+    {
+        return '<div class="tp-paid-inline-placeholder tp-paid-theme-' . htmlspecialchars($themeId) . '"'
+            . ' style="' . htmlspecialchars($themeVars) . '"'
+            . ' data-mode="' . htmlspecialchars($themeMode) . '"'
+            . ' data-mode-switch="' . htmlspecialchars($themeModeSwitch) . '"'
+            . '>'
+            . '<svg class="tp-paid-placeholder-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">'
+            . '<rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>'
+            . '<path d="M7 11V7a5 5 0 0 1 10 0v4"/>'
+            . '</svg>'
+            . '<span class="tp-paid-placeholder-text">' . _t('此处为付费内容，请购买后查看') . '</span>'
+            . '</div>';
+    }
+
+    /**
+     * 构建部分付费的购买卡片
+     */
+    private static function buildPartialPaidCard($widget)
+    {
+        $cid = intval($widget->cid);
+        $price = self::normalizePrice(isset($widget->fields->paid_price) ? $widget->fields->paid_price : '0');
+        $channels = self::getPaymentChannels();
+        $methods = self::normalizeMethods(isset($widget->fields->paid_methods) ? $widget->fields->paid_methods : '');
+        if (empty($methods)) {
+            $methods = array_keys($channels);
+        }
+        $expanded = array();
+        foreach ($methods as $method) {
+            if (isset($channels[$method])) {
+                $expanded[] = $method;
+            } else {
+                $prefix = $method . ':';
+                foreach (array_keys($channels) as $key) {
+                    if (strpos($key, $prefix) === 0) {
+                        $expanded[] = $key;
+                    }
+                }
+            }
+        }
+        $methods = array_values(array_unique($expanded));
+
+        $themeValue = isset($widget->fields->paid_theme) ? trim((string)$widget->fields->paid_theme) : '';
+        $themeId = self::resolveThemeId($themeValue === '' ? self::getOption('default_theme', 'default') : $themeValue);
+
+        $tip = isset($widget->fields->paid_desc) && trim($widget->fields->paid_desc) !== ''
+            ? trim($widget->fields->paid_desc)
+            : self::getOption('default_paid_desc', '该文章为付费阅读内容，请先购买后查看全文。');
+
+        $globalThemeOptions = self::parseLineOptions(self::getOption('theme_advanced_options', ''));
+        $contentThemeOptions = self::parseLineOptions(isset($widget->fields->paid_theme_options) ? $widget->fields->paid_theme_options : '');
+        $themeOptions = array_merge($globalThemeOptions, $contentThemeOptions);
+
+        // 短代码模式：不显示正文预览，仅显示购买提示
+        $preview = '';
+        $actionBase = Typecho_Common::url('typechopaid', Helper::options()->index);
+
+        $methodHtml = '';
+        foreach ($methods as $method) {
+            $methodHtml .= '<label class="tp-paid-chip"><input type="radio" name="tp_paid_channel" value="' . htmlspecialchars($method) . '"' . ($methodHtml === '' ? ' checked' : '') . '> ' . htmlspecialchars($channels[$method]['name']) . '</label>';
+        }
+
+        $turnstileHtml = '';
+        $turnstileEnabled = intval(self::getOption('turnstile_enable', '0')) === 1;
+        $turnstileSiteKey = trim((string)self::getOption('turnstile_site_key', ''));
+        if ($turnstileEnabled && $turnstileSiteKey !== '') {
+            $threshold = intval(self::getOption('turnstile_daily_threshold', '3'));
+            if ($threshold <= 0) $threshold = 3;
+            $ip = self::clientIp();
+            if (self::dailyIpOrderCount($ip) >= $threshold) {
+                $turnstileHtml = '<div class="tp-paid-row"><div class="cf-turnstile" data-sitekey="' . htmlspecialchars($turnstileSiteKey, ENT_QUOTES, 'UTF-8') . '"></div></div>';
+            }
+        }
+
+        $themeMode = (string)self::getOption('paid_theme_mode', 'auto');
+        $themeModeSwitch = trim((string)self::getOption('paid_theme_mode_switch', 'system'));
+        if ($themeModeSwitch === '') $themeModeSwitch = 'system';
+
+        // 订阅计划
+        $articlePlanKeys = array();
+        if (isset($widget->fields->paid_plan) && trim((string)$widget->fields->paid_plan) !== '') {
+            $articlePlanKeys = array_map('trim', explode(',', (string)$widget->fields->paid_plan));
+        }
+        $allPlans = self::getSubscriptionPlans();
+        $planLabel = '';
+        $hasPlans = !empty($articlePlanKeys);
+        $hasPrice = $price > 0;
+
+        if ($hasPlans && !empty($allPlans)) {
+            $planNamesDisplay = array();
+            foreach ($articlePlanKeys as $pk) {
+                if (isset($allPlans[$pk])) $planNamesDisplay[] = $allPlans[$pk]['name'];
+            }
+            if (!empty($planNamesDisplay)) {
+                $planLabel = '<div class="tp-paid-plan-label">本文包含于：<strong>' . htmlspecialchars(implode('、', $planNamesDisplay)) . '</strong></div>';
+            }
+        }
+
+        $planCards = array();
+        $defaultSelected = null;
+        if ($hasPrice) {
+            $planCards[] = array('key' => '', 'name' => '单独购买文章', 'duration' => '', 'priceDisplay' => '￥' . number_format($price, 2), 'priceRaw' => number_format($price, 2), 'isSingle' => true);
+            $defaultSelected = '';
+        }
+        if ($hasPlans && !empty($allPlans)) {
+            foreach ($articlePlanKeys as $pk) {
+                if (!isset($allPlans[$pk])) continue;
+                $p = $allPlans[$pk];
+                $planCards[] = array('key' => $p['key'], 'name' => $p['name'], 'duration' => intval($p['duration_days']) . '天', 'priceDisplay' => '￥' . number_format($p['price'], 2), 'priceRaw' => number_format($p['price'], 2), 'isSingle' => false);
+                if ($defaultSelected === null && !$hasPrice) $defaultSelected = $p['key'];
+            }
+        }
+        $planHtml = '';
+        if (!empty($planCards)) {
+            $planHtml = '<div class="tp-paid-plans">';
+            foreach ($planCards as $card) {
+                $isSelected = ($card['key'] === $defaultSelected);
+                $planHtml .= '<label class="tp-paid-plan-card' . ($isSelected ? ' is-selected' : '') . '" data-plan="' . htmlspecialchars($card['key']) . '" data-price="' . htmlspecialchars($card['priceRaw']) . '" onclick="TypechoPaid.selectPlan(this)">'
+                    . '<input type="radio" name="tp_paid_plan" value="' . htmlspecialchars($card['key']) . '"' . ($isSelected ? ' checked' : '') . '>'
+                    . '<span class="tp-paid-plan-name">' . htmlspecialchars($card['name']) . '</span>';
+                if ($card['duration'] !== '') $planHtml .= '<span class="tp-paid-plan-duration">' . htmlspecialchars($card['duration']) . '</span>';
+                $planHtml .= '<span class="tp-paid-plan-price">' . $card['priceDisplay'] . '</span></label>';
+            }
+            $planHtml .= '<input type="hidden" name="tp_paid_plan" value=""></div>';
+        }
+
+        $themeAsset = self::themeAssetHtml($themeId);
+        $themeVars = self::buildThemeStyleVars($themeOptions);
+
+        $templateHtml = self::renderThemeHtml($themeId, array(
+            'theme_id' => htmlspecialchars($themeId),
+            'preview' => $preview,
+            'title' => '付费阅读',
+            'desc' => htmlspecialchars($tip),
+            'price' => $hasPrice ? number_format($price, 2) : '',
+            'show_price' => $hasPrice ? '1' : '0',
+            'plan_label' => $planLabel,
+            'cid' => intval($cid),
+            'create_action' => htmlspecialchars($actionBase . '/create'),
+            'unlock_action' => htmlspecialchars($actionBase . '/unlock'),
+            'status_action' => htmlspecialchars($actionBase . '/status'),
+            'subscribe_action' => htmlspecialchars($actionBase . '/subscribe'),
+            'methods_html' => ($methodHtml === '' ? '<span class="tp-paid-msg is-err">管理员尚未配置可用支付渠道。</span>' : $methodHtml),
+            'buy_disabled' => ($methodHtml === '' ? ' disabled' : ''),
+            'turnstile_html' => $turnstileHtml,
+            'plan_html' => $planHtml,
+            'theme_mode' => htmlspecialchars($themeMode, ENT_QUOTES, 'UTF-8'),
+            'theme_mode_switch' => htmlspecialchars($themeModeSwitch, ENT_QUOTES, 'UTF-8'),
+            'theme_style_vars' => htmlspecialchars($themeVars),
+            'theme_options_json' => htmlspecialchars(json_encode($themeOptions), ENT_QUOTES, 'UTF-8')
+        ));
+
+        $payload = base64_encode($themeAsset . $templateHtml);
+        return '<span class="tp-paid-placeholder" data-tp-paid="' . htmlspecialchars($payload, ENT_QUOTES, 'UTF-8') . '"></span>';
     }
 
     public static function isUnlockedByCookie($cid, $fields = null)
@@ -1610,6 +2092,115 @@ html[data-theme="dark"] .tp-doc-promo-close:hover{background:rgba(255,255,255,.0
     }
 
     /**
+     * 生成赞赏与鸣谢卡片
+     * 包含微信赞赏码占位、鸣谢列表、插件信息链接
+     * @return string
+     */
+    public static function renderSponsorCard()
+    {
+        $github = 'https://github.com/lhl77/TypechoPaid';
+        $issuesUrl = 'https://github.com/lhl77/TypechoPaid/issues';
+        $sponsorUrl = self::SPONSOR_URL;
+        return '
+<style>
+.tp-sponsor-card{border-radius:12px;overflow:hidden;background:var(--md-surface-container-low,var(--md-surface,#fff));border:1px solid var(--md-outline-variant,#e0e0e0);box-shadow:0 1px 3px rgba(0,0,0,.05);color:var(--md-on-surface,#1c1b1f);margin:20px 0 0!important;width:100%!important;max-width:100%!important;flex:0 0 100%!important;box-sizing:border-box!important;}
+html[data-theme="dark"] .tp-sponsor-card{background:var(--md-dark-surface-container-low,#1e1e2a)!important;border-color:var(--md-dark-outline-variant,rgba(255,255,255,.08))!important;color:var(--md-dark-on-surface,#e4e2ed)!important;}
+.tp-sponsor-header{display:flex!important;align-items:center!important;gap:10px!important;padding:14px 20px!important;border-bottom:1px solid var(--md-outline-variant,#e0e0e0)!important;font-size:15px!important;font-weight:600!important;line-height:1.3!important;}
+html[data-theme="dark"] .tp-sponsor-header{border-bottom-color:var(--md-dark-outline-variant,rgba(255,255,255,.08))!important;}
+.tp-sponsor-body{padding:18px 20px 20px!important;display:flex!important;flex-direction:column!important;gap:18px!important;}
+.tp-sponsor-grid{display:grid!important;grid-template-columns:1fr 1fr!important;gap:20px!important;}
+.tp-sponsor-col{display:flex!important;flex-direction:column!important;gap:10px!important;min-width:0!important;}
+.tp-sponsor-col h4{margin:0!important;font-size:14px!important;font-weight:600!important;line-height:1.4!important;display:flex!important;align-items:center!important;gap:6px!important;}
+.tp-sponsor-col h4 svg{flex-shrink:0!important;}
+.tp-sponsor-qr-wrap{display:flex!important;flex-direction:column!important;align-items:center!important;gap:10px!important;padding:12px!important;border-radius:10px!important;background:var(--md-surface-container,#f5f4f7)!important;border:1px dashed var(--md-outline-variant,#d0d0d6)!important;}
+.tp-sponsor-qr-img-wrap{position:relative!important;display:inline-block!important;border-radius:8px!important;overflow:hidden!important;line-height:0!important;}
+.tp-sponsor-qr-watermark{position:absolute!important;inset:auto 0 0 0!important;background:rgba(99,102,241,.75)!important;color:#fff!important;font-size:9px!important;font-weight:700!important;text-align:center!important;padding:2px 0!important;letter-spacing:1px!important;pointer-events:none!important;backdrop-filter:blur(1px)!important;line-height:1.4!important;}
+html[data-theme="dark"] .tp-sponsor-qr-wrap{background:var(--md-dark-surface-container,#2b2930)!important;border-color:var(--md-dark-outline-variant,#49454f)!important;}
+.tp-sponsor-qr-placeholder{width:132px!important;height:132px!important;display:flex!important;align-items:center!important;justify-content:center!important;border-radius:8px!important;background:#fff!important;color:var(--md-on-surface-variant,#6b6b78)!important;font-size:11px!important;text-align:center!important;line-height:1.4!important;padding:8px!important;box-sizing:border-box!important;}
+.tp-sponsor-qr-wrap .tp-sponsor-qr-tip{font-size:12px!important;color:var(--md-on-surface-variant,#6b6b78)!important;line-height:1.6!important;margin:0!important;text-align:center!important;}
+html[data-theme="dark"] .tp-sponsor-qr-wrap .tp-sponsor-qr-tip{color:var(--md-dark-on-surface-variant,#9d9caa)!important;}
+.tp-sponsor-note{font-size:12px!important;line-height:1.7!important;color:var(--md-on-surface-variant,#6b6b78)!important;margin:0!important;padding:8px 12px!important;border-radius:8px!important;background:var(--md-surface-container,#f5f4f7)!important;}
+html[data-theme="dark"] .tp-sponsor-note{background:var(--md-dark-surface-container,#2b2930)!important;color:var(--md-dark-on-surface-variant,#9d9caa)!important;}
+.tp-sponsor-note strong{color:var(--md-on-surface,#1c1b1f)!important;}
+html[data-theme="dark"] .tp-sponsor-note strong{color:var(--md-dark-on-surface,#e4e2ed)!important;}
+.tp-sponsor-note em{font-style:normal!important;color:#d97706!important;font-size:11px!important;}
+.tp-sponsor-list{list-style:none!important;margin:0!important;padding:0!important;display:flex!important;flex-direction:column!important;gap:6px!important;}
+.tp-sponsor-list li{display:flex!important;align-items:center!important;gap:8px!important;padding:7px 12px!important;border-radius:8px!important;font-size:13px!important;line-height:1.5!important;background:var(--md-surface-container,#f5f4f7)!important;transition:background .15s;}
+html[data-theme="dark"] .tp-sponsor-list li{background:var(--md-dark-surface-container,#2b2930)!important;}
+.tp-sponsor-list li .tp-sponsor-name{font-weight:600!important;color:var(--md-on-surface,#1c1b1f)!important;}
+html[data-theme="dark"] .tp-sponsor-list li .tp-sponsor-name{color:var(--md-dark-on-surface,#e4e2ed)!important;}
+.tp-sponsor-list li .tp-sponsor-desc{font-size:12px!important;color:var(--md-on-surface-variant,#6b6b78)!important;flex:1!important;min-width:0!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important;}
+html[data-theme="dark"] .tp-sponsor-list li .tp-sponsor-desc{color:var(--md-dark-on-surface-variant,#9d9caa)!important;}
+.tp-sponsor-list li .tp-sponsor-site{font-size:11px!important;color:var(--md-primary,#6366f1)!important;text-decoration:none!important;flex-shrink:0!important;max-width:140px!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important;}
+.tp-sponsor-list li .tp-sponsor-site:hover{text-decoration:underline!important;}
+.tp-sponsor-list li .tp-sponsor-amount{font-size:12px!important;color:var(--md-primary,#6366f1)!important;font-weight:600!important;flex-shrink:0!important;white-space:nowrap!important;}
+.tp-sponsor-list-empty{padding:20px!important;text-align:center!important;font-size:13px!important;color:var(--md-on-surface-variant,#6b6b78)!important;line-height:1.6!important;}
+html[data-theme="dark"] .tp-sponsor-list-empty{color:var(--md-dark-on-surface-variant,#9d9caa)!important;}
+.tp-sponsor-info-bar{display:flex!important;flex-wrap:wrap!important;align-items:center!important;gap:10px 20px!important;padding:12px 16px!important;border-radius:10px!important;background:var(--md-surface-container,#f5f4f7)!important;font-size:13px!important;}
+html[data-theme="dark"] .tp-sponsor-info-bar{background:var(--md-dark-surface-container,#2b2930)!important;}
+.tp-sponsor-info-bar .tp-sponsor-info-label{color:var(--md-on-surface-variant,#6b6b78)!important;font-weight:500!important;flex-shrink:0!important;}
+html[data-theme="dark"] .tp-sponsor-info-bar .tp-sponsor-info-label{color:var(--md-dark-on-surface-variant,#9d9caa)!important;}
+.tp-sponsor-info-bar a{color:var(--md-primary,#6366f1)!important;text-decoration:none!important;font-weight:500!important;}
+.tp-sponsor-info-bar a:hover{text-decoration:underline!important;}
+@media(max-width:768px){.tp-sponsor-grid{grid-template-columns:1fr!important;gap:16px!important;}.tp-sponsor-body{padding:14px 16px 16px!important;}.tp-sponsor-header{padding:12px 16px!important;font-size:14px!important;}.tp-sponsor-info-bar{flex-direction:column!important;align-items:flex-start!important;gap:6px!important;}}
+</style>
+<div class="tp-sponsor-card">
+    <div class="tp-sponsor-header">赞赏与鸣谢</div>
+    <div class="tp-sponsor-body">
+        <div class="tp-sponsor-grid">
+            <!-- 左侧：微信赞赏 -->
+            <div class="tp-sponsor-col">
+                <h4>
+                    微信赞赏
+                </h4>
+                <div class="tp-sponsor-qr-wrap">
+                    <a href="' . htmlspecialchars($sponsorUrl) . '" target="_blank" rel="noopener" style="display:flex;flex-direction:column;align-items:center;gap:10px;text-decoration:none;color:inherit;cursor:pointer;">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--md-primary,#6366f1)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+                        <span style="font-size:13px;font-weight:600;color:var(--md-primary,#6366f1);text-align:center;line-height:1.5;">点击前往赞助页<br><span style="font-size:11px;font-weight:400;color:var(--md-on-surface-variant,#6b6b78);">支持插件持续开发 ❤️</span></span>
+                    </a>
+                </div>
+                <div class="tp-sponsor-note">
+                    <strong>备注说明</strong><br>
+                    赞赏时请备注：<br>
+                    <strong>TypechoPaid</strong> + 您的昵称 + 网址<br>
+                    <em>⚠ 我们会审核网址合法性，仅个人或非商业网站将展示链接</em>
+                </div>
+            </div>
+            <!-- 右侧：鸣谢列表 -->
+            <div class="tp-sponsor-col">
+                <h4>
+                    鸣谢列表
+                </h4>
+                <div class="tp-sponsor-list-empty">
+                    暂无记录<br>
+                    <span style="font-size:12px;">成为第一位赞赏者，您的名字将在此展示</span>
+                </div>
+                <div style="margin-top:auto;padding-top:8px;font-size:12px;color:var(--md-on-surface-variant,#6b6b78);line-height:1.6;border-top:1px solid var(--md-outline-variant,#e0e0e0);">
+                    <a href="' . htmlspecialchars($sponsorUrl) . '" target="_blank" rel="noopener" style="color:var(--md-primary,#6366f1);text-decoration:none;font-weight:500;">前往赞助页 →</a>
+                </div>
+            </div>
+        </div>
+        <!-- 底部：插件信息 -->
+        <div class="tp-sponsor-info-bar">
+            <span>GitHub：<a href="' . htmlspecialchars($github) . '" target="_blank" rel="noopener">' . htmlspecialchars($github) . '</a></span>
+            <span>Issues：<a href="' . htmlspecialchars($issuesUrl) . '" target="_blank" rel="noopener">' . htmlspecialchars($issuesUrl) . '</a></span>
+        </div>
+    </div>
+</div>';
+    }
+
+    /**
+     * 校验赞助页链接是否被篡改
+     * @param string $url 待校验的 URL
+     * @return bool
+     */
+    private static function isSponsorUrlIntact($url)
+    {
+        // 内嵌哈希值校验：二开者若修改 SPONSOR_URL 而未同步更新此处哈希值会触发警告
+        return hash('sha256', $url) === '9964f3caea5f0520b37ae93bde8977070d1d20109756f63faca789e19fe2a1fc';
+    }
+
+    /**
      * 生成插件信息卡片（含版本、作者、GitHub、更新检查）
      * 风格与下方折叠面板统一
      * @param bool $showSettings 是否显示"插件设置"按钮（设置页面应传 false）
@@ -1618,12 +2209,12 @@ html[data-theme="dark"] .tp-doc-promo-close:hover{background:rgba(255,255,255,.0
      */
     public static function renderInfoCard($showSettings = true, $showSponsor = false)
     {
-        $version = '1.0.2';
+        $version = '1.0.3';
         $authorUrl = 'https://lhl.one';
         $author = 'LHL';
         $github = 'https://github.com/lhl77/TypechoPaid';
         $docUrl = 'https://blog.lhl.one/artical/1309.html';
-        $sponsorUrl = 'https://blog.lhl.one/about.html#%E6%94%AF%E6%8C%81';
+        $sponsorUrl = self::SPONSOR_URL;
         $settingsUrl = Typecho_Widget::widget('Widget_Options')->adminUrl('options-plugin.php?config=TypechoPaid', true);
 
         $abStoreEnabled = false;
@@ -1631,6 +2222,15 @@ html[data-theme="dark"] .tp-doc-promo-close:hover{background:rgba(255,255,255,.0
             $plugins = Typecho_Plugin::export();
             $abStoreEnabled = isset($plugins['activated']['AdminBeautify']);
         } catch (\Exception $e) {}
+
+        $sponsorBtnHtml = '';
+        if ($showSponsor) {
+            if (self::isSponsorUrlIntact($sponsorUrl)) {
+                $sponsorBtnHtml = '<a class="tp-infocard-sponsorbtn" href="' . htmlspecialchars($sponsorUrl) . '" target="_blank" rel="noopener"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>赞助作者</a>';
+            } else {
+                $sponsorBtnHtml = '<span style="display:inline-flex;align-items:center;gap:5px;padding:7px 16px;border-radius:20px;background:#dc2626;color:#fff;font-size:12px;font-weight:600;white-space:nowrap;">⚠ 赞助链接已被篡改，请停止使用</span>';
+            }
+        }
 
         $settingsBtnHtml = $showSettings ? '
             <a class="tp-infocard-settingsbtn" href="' . htmlspecialchars($settingsUrl) . '">
@@ -1689,7 +2289,7 @@ html[data-theme="dark"] .tp-infocard-update-result{border-top-color:var(--md-dar
             </p>
         </div>
         <div class="tp-infocard-actions">
-            ' . ($showSponsor ? '<a class="tp-infocard-sponsorbtn" href="' . htmlspecialchars($sponsorUrl) . '" target="_blank" rel="noopener"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>赞助作者</a>' : '') . '
+            ' . $sponsorBtnHtml . '
             ' . $settingsBtnHtml . '
             <a class="tp-infocard-docbtn" href="' . htmlspecialchars($docUrl) . '" target="_blank" rel="noopener">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>使用文档
@@ -2309,7 +2909,7 @@ html[data-theme="dark"] .tp-infocard-update-result{border-top-color:var(--md-dar
     {
         return '<div class="tp-paid-box tp-paid-theme-{{theme_id}}" style="{{theme_style_vars}}" data-theme-options="{{theme_options_json}}" data-mode="{{theme_mode}}" data-mode-switch="{{theme_mode_switch}}">'
             . '<div class="tp-paid-preview">{{preview}}</div>'
-            . '<div class="tp-paid-card" data-status-action="{{status_action}}">'
+            . '<div class="tp-paid-card" id="tp-paid-card" data-status-action="{{status_action}}">'
             . '<div class="tp-paid-buy-view">'
             . '<h3 class="tp-paid-title">{{title}}</h3>'
             . '<p class="tp-paid-desc">{{desc}}</p>'
