@@ -32,7 +32,72 @@ class TypechoPaid_Action extends Widget_Abstract_Contents implements Widget_Inte
             return $this->createSubscribe();
         }
 
+        if ($do === 'validate_coupon') {
+            return $this->validateCouponCode();
+        }
+
         $this->response->throwJson(array('success' => 0, 'msg' => '无效请求'));
+    }
+
+    private function validateCouponCode()
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $this->response->throwJson(array('success' => 0, 'msg' => '请求方法不正确'));
+        }
+
+        $code = trim((string)$this->request->get('code'));
+        $cid = intval($this->request->get('cid'));
+
+        if ($code === '' || $cid <= 0) {
+            $this->response->throwJson(array('success' => 0, 'msg' => '参数不完整'));
+        }
+
+        // Turnstile 验证（同 IP 当日下单次数达到阈值时要求验证）
+        $turnstileEnabled = intval(TypechoPaid_Plugin::getOption('turnstile_enable', '0')) === 1;
+        $turnstileSiteKey = trim((string)TypechoPaid_Plugin::getOption('turnstile_site_key', ''));
+        if ($turnstileEnabled && $turnstileSiteKey !== '') {
+            $threshold = intval(TypechoPaid_Plugin::getOption('turnstile_daily_threshold', '3'));
+            if ($threshold <= 0) $threshold = 3;
+            $ip = $this->clientIp();
+            if (TypechoPaid_Plugin::dailyIpOrderCount($ip) >= $threshold) {
+                $token = trim((string)$this->request->get('cf-turnstile-response'));
+                if (!$this->verifyTurnstile($token, $ip)) {
+                    $this->response->throwJson(array('success' => 0, 'msg' => '安全验证未通过，请完成验证后重试'));
+                }
+            }
+        }
+
+        $coupon = TypechoPaid_Plugin::validateCoupon($code, $cid);
+        if ($coupon === null) {
+            $this->response->throwJson(array('success' => 0, 'msg' => '优惠码无效或不适于该文章'));
+        }
+
+        // 获取文章价格以计算折扣
+        $fields = $this->fetchContentFields($cid);
+        $price = TypechoPaid_Plugin::normalizePrice(isset($fields['paid_price']) ? $fields['paid_price'] : 0);
+        $discountPrice = TypechoPaid_Plugin::applyCouponDiscount($price, $coupon);
+        $savedAmount = round($price - $discountPrice, 2);
+
+        $discountLabel = '';
+        if ($coupon['is_percent']) {
+            $discountLabel = '打' . number_format(100 - $coupon['value'], 0) . '折';
+        } else {
+            $discountLabel = '减￥' . number_format($coupon['value'], 2);
+        }
+
+        $this->response->throwJson(array(
+            'success' => 1,
+            'msg' => '优惠码有效',
+            'name' => $coupon['name'],
+            'code' => $coupon['code'],
+            'is_percent' => $coupon['is_percent'],
+            'value' => floatval($coupon['value']),
+            'original_price' => $price,
+            'discount_price' => $discountPrice,
+            'saved_amount' => $savedAmount,
+            'discount' => number_format($discountPrice, 2),
+            'discount_label' => $discountLabel
+        ));
     }
 
     private function createOrder()
@@ -114,6 +179,19 @@ class TypechoPaid_Action extends Widget_Abstract_Contents implements Widget_Inte
         }
 
         $price = TypechoPaid_Plugin::normalizePrice(isset($fields['paid_price']) ? $fields['paid_price'] : 0);
+
+        // 优惠码处理：有 code 则服务端校验，无效直接报错
+        $couponCode = trim((string)$this->request->get('coupon_code'));
+        $couponName = '';
+        if ($couponCode !== '') {
+            $coupon = TypechoPaid_Plugin::validateCoupon($couponCode, $cid);
+            if ($coupon === null) {
+                $this->response->throwJson(array('success' => 0, 'msg' => '优惠码无效或不适于该文章'));
+            }
+            $price = TypechoPaid_Plugin::applyCouponDiscount($price, $coupon);
+            $couponName = $coupon['name'];
+        }
+
         $tradeNo = $this->buildTradeNo($cid);
         $now = time();
 
@@ -164,7 +242,8 @@ class TypechoPaid_Action extends Widget_Abstract_Contents implements Widget_Inte
             'pay_url' => $row['pay_url'],
             'qr' => ($qrCapable && $row['pay_url'] !== '') ? 1 : 0,
             'auto_paid' => $autoPaid ? 1 : 0,
-            'msg' => '下单成功'
+            'msg' => '下单成功',
+            'coupon_name' => $couponName
         );
         if ($qrUrl !== '') {
             $response['qr_url'] = $qrUrl;

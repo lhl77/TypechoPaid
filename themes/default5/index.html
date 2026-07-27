@@ -31,6 +31,7 @@
           <input type="hidden" name="plan_key" value="">
           <input class="tp-paid-input" type="email" name="email" placeholder="电子邮箱地址" required>
           <input class="tp-paid-input" type="text" name="visit_password" placeholder="访问密码（选填）">
+          {{coupon_html}}
           <div class="tp-paid-methods">{{methods_html}}</div>
           {{turnstile_html}}
           <button class="tp-paid-btn" type="submit"{{buy_disabled}}>立即购买</button>

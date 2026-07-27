@@ -395,6 +395,18 @@
 }
 
 /* ---------- CSS 变量（亮色默认） ---------- */
+/* :root 兜底：防止浏览器在元素未匹配 class 时报 var() 无效值警告 */
+:root {
+    --tp-bg: #ffffff;
+    --tp-fg: #1d1f28;
+    --tp-muted: #5b6270;
+    --tp-border: #dfe2ea;
+    --tp-input-bg: #f9fafc;
+    --tp-chip-bg: #f3f5f9;
+    --tp-primary: #2563eb;
+    --tp-shadow: rgba(27, 39, 70, 0.08);
+    --tp-radius: 20px;
+}
 .tp-paid-box {
     --tp-bg: #ffffff;
     --tp-fg: #1d1f28;
@@ -482,6 +494,23 @@
 }
 .tp-paid-copyright a:hover {
     color: var(--tp-primary, #2563eb);
+}
+
+/* ===== 优惠码 ===== */
+.tp-paid-coupon-result {
+    margin-top: 0.35rem;
+    font-size: 0.82rem;
+    line-height: 1.5;
+    min-height: 1.2em;
+}
+.tp-paid-coupon-result.is-ok {
+    color: #0a8f43;
+}
+.tp-paid-coupon-result.is-err {
+    color: #d93025;
+}
+.tp-paid-coupon-ok {
+    font-weight: 600;
 }
 
 /* ===== [Paid] 短代码内联占位符 ===== */

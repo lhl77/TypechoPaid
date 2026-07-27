@@ -6,7 +6,7 @@ if (!defined('__TYPECHO_ROOT_DIR__')) exit;
  *
  * @package TypechoPaid
  * @author LHL
- * @version 1.0.3
+ * @version 1.0.4
  * @link https://github.com/lhl77/TypechoPaid
  */
 class TypechoPaid_Plugin implements Typecho_Plugin_Interface
@@ -142,6 +142,21 @@ class TypechoPaid_Plugin implements Typecho_Plugin_Interface
             _t('开启后创建订单立即标记为已支付，便于联调。生产环境请关闭并接入真实回调。')
         );
         $form->addInput($sandboxAutoPaid);
+
+        // ======================== 🎫 优惠码 ========================
+        self::renderConfigCard(_t('优惠码'), _t('配置折扣优惠码，一行一个'), array('coupon_codes'), $isGet);
+
+        $couponCodes = new Typecho_Widget_Helper_Form_Element_Textarea(
+            'coupon_codes',
+            null,
+            '',
+            _t('优惠码定义'),
+            _t('每行格式：优惠码名称|优惠码|优惠方式(直接数字则减该金额，带%则为折扣)|适用文章UID(用,分开)<br>'
+                . '例如：<code>开业大吉|Welcome|30%|1,3</code> 表示对文章 1 和 3 打七折<br>'
+                . '例如：<code>满减|SAVE10|10|2,5</code> 表示文章 2 和 5 减 10 元<br>'
+                . '留空则不启用优惠码功能。优惠码验证受 Turnstile 保护。')
+        );
+        $form->addInput($couponCodes);
 
         self::renderConfigCard(_t('购买卡片外观'), _t('自定义前台付费卡片的主题、文案与亮暗模式'), array('default_theme','default_paid_desc','theme_advanced_options','paid_theme_mode','paid_theme_mode_switch'), $isGet);
 
@@ -304,11 +319,17 @@ class TypechoPaid_Plugin implements Typecho_Plugin_Interface
 
     public static function injectHeadAssets()
     {
+        // 全局 CSS/JS 通过外链加载，附带文件时间戳防止 CDN 缓存问题
         $options = Helper::options();
-        $cssUrl = Typecho_Common::url('TypechoPaid/assets/style.css', $options->pluginUrl);
-        $qrUrl = Typecho_Common::url('TypechoPaid/assets/vendor/qrcode.js', $options->pluginUrl);
-        echo '<link rel="stylesheet" href="' . htmlspecialchars($cssUrl) . '">' . "\n";
-        echo '<script src="' . htmlspecialchars($qrUrl) . '" defer></script>' . "\n";
+        $pluginUrl = Typecho_Common::url('TypechoPaid', $options->pluginUrl);
+
+        $cssFile = __DIR__ . '/assets/style.css';
+        $cssTs = is_file($cssFile) ? filemtime($cssFile) : time();
+        echo '<link rel="stylesheet" href="' . htmlspecialchars($pluginUrl . '/assets/style.css?v=' . $cssTs) . '">' . "\n";
+
+        $qrFile = __DIR__ . '/assets/vendor/qrcode.js';
+        $qrTs = is_file($qrFile) ? filemtime($qrFile) : time();
+        echo '<script src="' . htmlspecialchars($pluginUrl . '/assets/vendor/qrcode.js?v=' . $qrTs) . '" defer></script>' . "\n";
 
         $turnstileEnabled = intval(self::getOption('turnstile_enable', '0')) === 1;
         if ($turnstileEnabled) {
@@ -318,7 +339,7 @@ class TypechoPaid_Plugin implements Typecho_Plugin_Interface
         echo '<script>'
             . '(function(){'
             . 'var _t0=typeof performance!=="undefined"?performance.now():Date.now();'
-            . 'var _v="1.0.3";'
+            . 'var _v="1.0.4";'
             . 'var _u="https://github.com/lhl77/TypechoPaid";'
             . 'var _done=false;'
             . 'function _tp(label){'
@@ -609,6 +630,16 @@ class TypechoPaid_Plugin implements Typecho_Plugin_Interface
                         setTimeout(function(){location.reload();},700);
                         return;
                     }
+                    // 优惠码验证成功后显示名称
+                    if(res.coupon_name){
+                        var couponInput=card?card.querySelector('input[name=coupon_code]'):null;
+                        if(couponInput){couponInput.disabled=true;couponInput.readOnly=true;}
+                        var couponResult=card?card.querySelector('[data-role=coupon-result]'):null;
+                        if(couponResult){
+                            couponResult.innerHTML='<span class="tp-paid-coupon-ok">已使用优惠码：'+escapeHtml(res.coupon_name)+'</span>';
+                            couponResult.className='tp-paid-coupon-result is-ok';
+                        }
+                    }
                     TypechoPaid.renderPaymentBox(card,res);
                     if(res.trade_no){TypechoPaid.startPolling(card,res.trade_no);}
                     return;
@@ -634,6 +665,7 @@ class TypechoPaid_Plugin implements Typecho_Plugin_Interface
                 tip.textContent='请使用手机扫码完成支付';
                 box.appendChild(tip);
                 try{
+                    if(typeof window.qrcode!=='function'){throw new Error('qrcode not loaded');}
                     var qr=window.qrcode(0,'L');
                     qr.addData(url);
                     qr.make();
@@ -735,7 +767,7 @@ class TypechoPaid_Plugin implements Typecho_Plugin_Interface
             var planKeyInput=form?form.querySelector('input[name=plan_key]'):null;
             if(planKeyInput){planKeyInput.value=cardEl.getAttribute('data-plan')||'';}
             // 更新价格显示 — 兼容不同主题的金额 DOM 结构
-            var isSubscription=cardEl.getAttribute('data-plan')!=='';
+            var isSubscription=(cardEl.getAttribute('data-plan')||'')!=='';
             var newPrice=cardEl.getAttribute('data-price');
             if(box){
                 var priceEl=box.querySelector('[data-role="price-display"]');
@@ -1149,6 +1181,10 @@ SCRIPT;
         // 决定是否显示单篇价格行
         $showSingleBuy = $hasPrice;
 
+        // 生成优惠码 HTML（仅当文章有适用优惠码时）
+        $articleCoupons = self::getCouponsForArticle(intval($cid));
+        $couponHtml = self::renderCouponHtml($articleCoupons);
+
         $themeAsset = self::themeAssetHtml($themeId);
         $themeVars = self::buildThemeStyleVars($themeOptions);
 
@@ -1169,6 +1205,7 @@ SCRIPT;
             'buy_disabled' => ($methodHtml === '' ? ' disabled' : ''),
             'turnstile_html' => $turnstileHtml,
             'plan_html' => $planHtml,
+            'coupon_html' => $couponHtml,
             'theme_mode' => htmlspecialchars($themeMode, ENT_QUOTES, 'UTF-8'),
             'theme_mode_switch' => htmlspecialchars($themeModeSwitch, ENT_QUOTES, 'UTF-8'),
             'theme_style_vars' => htmlspecialchars($themeVars),
@@ -1504,6 +1541,10 @@ SCRIPT;
             $planHtml .= '<input type="hidden" name="tp_paid_plan" value=""></div>';
         }
 
+        // 生成优惠码 HTML
+        $articleCoupons = self::getCouponsForArticle(intval($cid));
+        $couponHtml = self::renderCouponHtml($articleCoupons);
+
         $themeAsset = self::themeAssetHtml($themeId);
         $themeVars = self::buildThemeStyleVars($themeOptions);
 
@@ -1524,6 +1565,7 @@ SCRIPT;
             'buy_disabled' => ($methodHtml === '' ? ' disabled' : ''),
             'turnstile_html' => $turnstileHtml,
             'plan_html' => $planHtml,
+            'coupon_html' => $couponHtml,
             'theme_mode' => htmlspecialchars($themeMode, ENT_QUOTES, 'UTF-8'),
             'theme_mode_switch' => htmlspecialchars($themeModeSwitch, ENT_QUOTES, 'UTF-8'),
             'theme_style_vars' => htmlspecialchars($themeVars),
@@ -2209,7 +2251,7 @@ html[data-theme="dark"] .tp-sponsor-info-bar .tp-sponsor-info-label{color:var(--
      */
     public static function renderInfoCard($showSettings = true, $showSponsor = false)
     {
-        $version = '1.0.3';
+        $version = '1.0.4';
         $authorUrl = 'https://lhl.one';
         $author = 'LHL';
         $github = 'https://github.com/lhl77/TypechoPaid';
@@ -2539,6 +2581,141 @@ html[data-theme="dark"] .tp-infocard-update-result{border-top-color:var(--md-dar
     }
 
     /**
+     * 解析优惠码配置
+     * @return array 优惠码数组，key 为优惠码代码（小写）
+     */
+    public static function getCoupons()
+    {
+        $text = trim((string)self::getOption('coupon_codes', ''));
+        if ($text === '') {
+            return array();
+        }
+        $coupons = array();
+        foreach (preg_split('/\r\n|\r|\n/', $text) as $line) {
+            $line = trim($line);
+            if ($line === '' || strpos($line, '#') === 0 || strpos($line, '|') === false) {
+                continue;
+            }
+            $parts = explode('|', $line, 4);
+            if (count($parts) < 4) {
+                continue;
+            }
+            $name = trim($parts[0]);
+            $code = trim($parts[1]);
+            $method = trim($parts[2]);
+            $articleUids = trim($parts[3]);
+            if ($name === '' || $code === '' || $method === '' || $articleUids === '') {
+                continue;
+            }
+            // 解析适用文章 UID
+            $uidArr = array();
+            foreach (explode(',', $articleUids) as $uid) {
+                $uid = intval(trim($uid));
+                if ($uid > 0) {
+                    $uidArr[$uid] = $uid;
+                }
+            }
+            if (empty($uidArr)) {
+                continue;
+            }
+            // 解析优惠方式
+            $isPercent = strpos($method, '%') !== false;
+            $value = floatval(str_replace('%', '', $method));
+            if ($value <= 0) {
+                continue;
+            }
+            $coupons[strtolower($code)] = array(
+                'name' => $name,
+                'code' => $code,
+                'is_percent' => $isPercent,
+                'value' => $value,
+                'article_uids' => $uidArr
+            );
+        }
+        return $coupons;
+    }
+
+    /**
+     * 获取适用于指定文章的优惠码列表
+     * @param int $cid 文章 CID
+     * @return array
+     */
+    public static function getCouponsForArticle($cid)
+    {
+        $cid = intval($cid);
+        if ($cid <= 0) {
+            return array();
+        }
+        $all = self::getCoupons();
+        if (empty($all)) {
+            return array();
+        }
+        $result = array();
+        foreach ($all as $code => $coupon) {
+            if (isset($coupon['article_uids'][$cid])) {
+                $result[$code] = $coupon;
+            }
+        }
+        return $result;
+    }
+
+    /**
+     * 验证优惠码是否有效
+     * @param string $code 优惠码
+     * @param int $cid 文章 CID
+     * @return array|null 优惠码信息或 null（无效）
+     */
+    public static function validateCoupon($code, $cid)
+    {
+        $code = trim((string)$code);
+        $cid = intval($cid);
+        if ($code === '' || $cid <= 0) {
+            return null;
+        }
+        $coupons = self::getCouponsForArticle($cid);
+        $key = strtolower($code);
+        if (isset($coupons[$key])) {
+            return $coupons[$key];
+        }
+        return null;
+    }
+
+    /**
+     * 应用优惠码折扣到价格
+     * @param float $price 原价
+     * @param array $coupon 优惠码信息
+     * @return float 折扣后的价格
+     */
+    public static function applyCouponDiscount($price, $coupon)
+    {
+        if ($coupon['is_percent']) {
+            // 百分比折扣：打 (100-value)% 折
+            $discount = $price * ($coupon['value'] / 100);
+            return round(max(0, $price - $discount), 2);
+        } else {
+            // 固定金额减免
+            return round(max(0, $price - $coupon['value']), 2);
+        }
+    }
+
+    /**
+     * 生成优惠码前端 HTML（包含输入框和提示）
+     * @param array $coupons 适用于当前文章的优惠码列表
+     * @return string
+     */
+    public static function renderCouponHtml($coupons)
+    {
+        if (empty($coupons)) {
+            return '';
+        }
+        $html = '<input class="tp-paid-input" type="text" name="coupon_code" placeholder="优惠码（选填）" autocomplete="off">'
+            . '<div class="tp-paid-coupon-result" data-role="coupon-result"></div>'
+            . '<input type="hidden" name="coupon_valid" value="">'
+            . '<input type="hidden" name="coupon_discount" value="">';
+        return $html;
+    }
+
+    /**
      * 同时兼容 Typecho_Config 字段对象和普通数组。
      * 不能将 Typecho_Config 直接转为数组，否则其私有配置会丢失 paid_plan 等字段。
      */
@@ -2824,10 +3001,20 @@ html[data-theme="dark"] .tp-infocard-update-result{border-top-color:var(--md-dar
     public static function themeAssetHtml($themeId)
     {
         $options = Helper::options();
-        $css = Typecho_Common::url('TypechoPaid/themes/' . rawurlencode($themeId) . '/theme.css', $options->pluginUrl);
-        $js = Typecho_Common::url('TypechoPaid/themes/' . rawurlencode($themeId) . '/main.js', $options->pluginUrl);
-        return '<link rel="stylesheet" href="' . htmlspecialchars($css) . '">'
-            . '<script src="' . htmlspecialchars($js) . '" defer></script>';
+        $pluginUrl = Typecho_Common::url('TypechoPaid', $options->pluginUrl);
+        $themeDir = __DIR__ . '/themes/' . $themeId;
+
+        // 主题 CSS/JS 通过外链加载，附带文件修改时间戳防止 CDN 缓存问题
+        $cssFile = $themeDir . '/theme.css';
+        $cssTs = is_file($cssFile) ? filemtime($cssFile) : time();
+        $cssUrl = $pluginUrl . '/themes/' . rawurlencode($themeId) . '/theme.css?v=' . $cssTs;
+
+        $jsFile = $themeDir . '/main.js';
+        $jsTs = is_file($jsFile) ? filemtime($jsFile) : time();
+        $jsUrl = $pluginUrl . '/themes/' . rawurlencode($themeId) . '/main.js?v=' . $jsTs;
+
+        return '<link rel="stylesheet" href="' . htmlspecialchars($cssUrl) . '">'
+            . '<script src="' . htmlspecialchars($jsUrl) . '" defer></script>';
     }
 
     public static function renderThemeHtml($themeId, array $vars)
@@ -2855,6 +3042,7 @@ html[data-theme="dark"] .tp-infocard-update-result{border-top-color:var(--md-dar
             '{{turnstile_html}}' => $vars['turnstile_html'],
             '{{plan_html}}' => $vars['plan_html'],
             '{{plan_label}}' => $vars['plan_label'],
+            '{{coupon_html}}' => $vars['coupon_html'],
             '{{show_price}}' => $vars['show_price'],
             '{{theme_mode}}' => $vars['theme_mode'],
             '{{theme_mode_switch}}' => $vars['theme_mode_switch'],
@@ -2922,6 +3110,7 @@ html[data-theme="dark"] .tp-infocard-update-result{border-top-color:var(--md-dar
             . '<input type="hidden" name="plan_key" value="">'
             . '<div class="tp-paid-row"><input class="tp-paid-input" type="email" name="email" placeholder="邮箱" required></div>'
             . '<div class="tp-paid-row"><label class="tp-paid-label">设置访问密码（可留空）</label><input class="tp-paid-input" type="text" name="visit_password" placeholder="访问密码（每个订单独立）"></div>'
+            . '{{coupon_html}}'
             . '<div class="tp-paid-methods">{{methods_html}}</div>'
             . '{{turnstile_html}}'
             . '<div class="tp-paid-row"><button class="tp-paid-btn" type="submit"{{buy_disabled}}>立即购买</button></div>'

@@ -30,6 +30,7 @@
               <label class="tp-paid-label">访问密码 <span class="tp-paid-optional">选填</span></label>
               <input class="tp-paid-input" type="text" name="visit_password" placeholder="每个订单独立">
             </div>
+            {{coupon_html}}
             <div class="tp-paid-methods">{{methods_html}}</div>
             {{turnstile_html}}
             <button class="tp-paid-btn" type="submit"{{buy_disabled}}>立即购买</button>
