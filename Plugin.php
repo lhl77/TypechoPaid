@@ -6,7 +6,7 @@ if (!defined('__TYPECHO_ROOT_DIR__')) exit;
  *
  * @package TypechoPaid
  * @author LHL
- * @version 1.0.4
+ * @version 1.0.5
  * @link https://github.com/lhl77/TypechoPaid
  */
 class TypechoPaid_Plugin implements Typecho_Plugin_Interface
@@ -339,7 +339,7 @@ class TypechoPaid_Plugin implements Typecho_Plugin_Interface
         echo '<script>'
             . '(function(){'
             . 'var _t0=typeof performance!=="undefined"?performance.now():Date.now();'
-            . 'var _v="1.0.4";'
+            . 'var _v="1.0.5";'
             . 'var _u="https://github.com/lhl77/TypechoPaid";'
             . 'var _done=false;'
             . 'function _tp(label){'
@@ -1426,7 +1426,11 @@ SCRIPT;
             . '<rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>'
             . '<path d="M7 11V7a5 5 0 0 1 10 0v4"/>'
             . '</svg>'
-            . '<span class="tp-paid-placeholder-text">' . _t('此处为付费内容，请购买后查看') . '</span>'
+            . '<span class="tp-paid-placeholder-text">'
+            . _t('此处为付费内容，请')
+            . ' <a class="tp-paid-placeholder-buy" href="#tp-paid-card" onclick="event.preventDefault();var el=document.getElementById(\'tp-paid-card\');if(el){el.scrollIntoView({behavior:\'smooth\',block:\'start\'});}">' . _t('购买') . '</a> '
+            . _t('后查看')
+            . '</span>'
             . '</div>';
     }
 
@@ -2251,7 +2255,7 @@ html[data-theme="dark"] .tp-sponsor-info-bar .tp-sponsor-info-label{color:var(--
      */
     public static function renderInfoCard($showSettings = true, $showSponsor = false)
     {
-        $version = '1.0.4';
+        $version = '1.0.5';
         $authorUrl = 'https://lhl.one';
         $author = 'LHL';
         $github = 'https://github.com/lhl77/TypechoPaid';
